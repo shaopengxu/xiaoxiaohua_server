@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="GBK"?>
+<toolbox>
+    <tool>
+        <key>stringUtils</key>
+        <scope>request</scope>
+        <class>org.apache.commons.lang.StringUtils</class>
+    </tool>
+
+    <tool>
+        <key>userTool</key>
+        <scope>application</scope>
+        <class>com.u.bops.util.UserTools</class>
+    </tool>
+
+</toolbox>

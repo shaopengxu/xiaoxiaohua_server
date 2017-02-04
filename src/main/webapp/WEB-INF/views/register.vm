@@ -1,0 +1,115 @@
+#set( $layout = "layout_no_menu.vm" )
+<style>
+	body {
+		padding-top: 40px;
+		padding-bottom: 40px;
+		background-color: #eee;
+	}
+
+	.form-signin {
+		max-width: 330px;
+		padding: 15px;
+		margin: 0 auto;
+	}
+	.form-signin .form-signin-heading,
+	.form-signin .checkbox {
+		margin-bottom: 10px;
+	}
+	.form-signin .checkbox {
+		font-weight: normal;
+	}
+	.form-signin .form-control {
+		position: relative;
+		height: auto;
+		-webkit-box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		box-sizing: border-box;
+		padding: 10px;
+		font-size: 16px;
+	}
+	.form-signin .form-control:focus {
+		z-index: 2;
+	}
+	.form-signin input[type="email"] {
+		margin-bottom: -1px;
+		border-bottom-right-radius: 0;
+		border-bottom-left-radius: 0;
+	}
+	.form-signin input[type="password"] {
+		margin-bottom: 10px;
+		border-top-left-radius: 0;
+		border-top-right-radius: 0;
+	}
+</style>
+<div class="container">
+
+	<form action="/user/register.htm" method="post" id="registerForm" class="form-signin">
+		<h2 class="form-signin-heading">注册</h2>
+		<input type="input" name="username" class="form-control" placeholder="username" autofocus>
+		<input type="password" name="password" class="form-control" placeholder="password">
+		<input type="password" name="password-again" class="form-control" placeholder="password confirm">
+		<div id="tip" class="text-warning">
+		</div>
+
+		<!--
+		<div class="checkbox">
+			<label>
+				<input type="checkbox" value="remember-me"> Remember me
+			</label>
+		</div>
+		-->
+		<button class="btn btn-lg btn-primary btn-block" type="submit">注册</button>
+        <a class="btn btn-lg btn-block" href="/index.htm">返回登录</a>
+	</form>
+
+</div>
+
+<script type="text/javascript">
+	$(document).ready(
+		function() {
+			var tip = $('#tip');
+			var registerForm = $('#registerForm');
+			registerForm.submit(
+				function(e) {
+					//e.preventDefault();
+					var u = $('input[name="username"]').val();
+					var p = $('input[name="password"]').val();
+					var pa = $('input[name="password-again"]').val();
+					console.log(u + ',' + p);
+					if(!u || !p || !pa) {
+						showTip('请输入用户名和密码');
+						return false;
+					}
+					if( p != pa) {
+						showTip('密码不一致');
+						return false;
+					}
+					hideTip();
+					return true;
+					/*
+					$.post(
+					'/login.json',
+					registerForm.serialize(),
+					function(result) {
+					console.log(result);
+					if(result.code != 0) {
+					showTip(result.errorMessage);
+					return;
+					}
+					document.location = '/index.htm';
+					}
+					);
+					*/
+				}
+			);
+			function showTip(m) {
+				tip.html(m);
+				tip.show();
+			}
+			function hideTip() {
+				tip.hide();
+			}
+		}
+	);
+
+</script>

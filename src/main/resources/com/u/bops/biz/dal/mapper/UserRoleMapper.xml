@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+       Copyright 2010-2013 the original author or authors.
+
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing, software
+       distributed under the License is distributed on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+       See the License for the specific language governing permissions and
+       limitations under the License.
+-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.u.bops.biz.dal.mapper.UserRoleMapper">
+
+    <!--
+  <cache />
+  -->
+
+    <select id="countByParam" parameterType="map" resultType="int">
+        SELECT count(*)
+        FROM user_roles
+        <where>
+            <if test="username != null">
+                username = #{username}
+            </if>
+        </where>
+    </select>
+
+    <select id="queryByParam" parameterType="map" resultType="UserRole">
+        SELECT *
+        FROM user_roles
+        <where>
+            <if test="username != null">
+                username = #{username}
+            </if>
+        </where>
+        order by id desc
+        limit #{offset}, #{rowCount}
+    </select>
+
+    <select id="getByParam" parameterType="map" resultType="UserRole">
+        SELECT *
+        FROM user_roles
+        <where>
+            state != 'D'
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="username != null">
+                and username = #{username}
+            </if>
+            <if test="roleName != null">
+                and role_name = #{roleName}
+            </if>
+        </where>
+        limit 1
+    </select>
+
+    <update id="updateById" parameterType="UserRole">
+        update user_roles
+        SET
+        role_name = #{roleName},
+        gmt_modify = now()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="long">
+        delete from user_roles
+        where id = #{value}
+    </delete>
+
+    <insert id="insert" parameterType="UserRole" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+        INSERT INTO user_roles
+        (id, username, role_name, gmt_create, gmt_modify)
+        VALUES
+        (#{id}, #{username}, #{roleName}, now(), now())
+    </insert>
+</mapper>

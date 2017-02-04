@@ -1,0 +1,260 @@
+#macro( videoGroupSel)
+	<select name="group1">
+		<option value=""></option>
+		<option value="1">默认</option>
+		<option value="2">云图动漫</option>
+		<option value="3">云图热剧</option>
+		<option value="4">云图综艺</option>
+		<option value="5">云图纪录</option>
+		<option value="6">云图影院</option>
+		<option value="7">新闻资讯</option>
+		<option value="8">电视剧</option>
+		<option value="9">精彩体育</option>
+		<option value="10">综艺娱乐</option>
+	</select >
+#end
+
+#macro( formTemplates)
+<div style="display:none;">
+	<div class="template-int template-date template-datetime template-string template-counter form-group">
+		<label class="col-sm-2 control-label"></label>
+		<div class="col-sm-6">
+			<input type="text" class="form-control" placeholder="">
+			<span class="help-block"></span>
+		</div>
+	</div>
+	<div class="template-tags form-group">
+		<label class="col-sm-2 control-label"></label>
+		<div class="col-sm-6">
+			<input type="text" class="form-control" placeholder="">
+			<div class="tree-tag"></div>
+			<span class="help-block"></span>
+		</div>
+	</div>
+	<div class="template-videoHtml form-group">
+		<label class="col-sm-2 control-label"></label>
+		<a class="link-result btn btn-primary" target="_blank">结果</a>
+		<div class="col-sm-6">
+			<input type="text" class="form-control" placeholder="" style="display:inline;">
+			<span class="help-block"></span>
+		</div>
+	</div>
+	<div class="template-text form-group">
+		<label class="col-sm-2 control-label"></label>
+		<div class="col-sm-8">
+			<textarea class="form-control" rows="6"></textarea>
+			<span class="help-block"></span>
+		</div>
+	</div>
+	<div class="template-oss form-group">
+		<label class="col-sm-2 control-label"></label>
+		<button type="button" class="btn-ossMove btn btn-primary">转存到CDN</button>
+		<a class="btn btn-primary" target="_blank">测试下载</a>
+		<div class="col-sm-6">
+			<input type="text" class="val-oss form-control" placeholder="">
+			<span class="help-block"></span>
+		</div>
+	</div>
+	<div class="template-image form-group">
+		<label class="col-sm-2 control-label"></label>
+		<div class="col-sm-6">
+			<input type="file" />
+			<input type="hidden" />
+			<a target="_blank"><img style="width:280px;height:150px"/></a>
+			<span class="help-block"></span>
+		</div>
+	</div>
+	<div class="template-url form-group">
+		<label class="col-sm-2 control-label"></label>
+		<div class="col-sm-6">
+			<input type="file" />
+			<input type="hidden" />
+			<a target="_blank"><img style="width:280px;height:150px"/></a>
+			<span class="help-block"></span>
+		</div>
+	</div>
+    <div class="template-channel form-group">
+        <label class="col-sm-2 control-label"></label>
+        <div class="col-sm-6">
+        </div>
+    </div>
+	<div class="template-checkbox form-group">
+		<label class="col-sm-2 control-label"></label>
+		<div class="col-sm-6">
+			<div class="input-container"></div>
+			<span class="help-block"></span>
+		</div>
+	</div>
+	<div class="template-sel form-group">
+		<label class="col-sm-2 control-label"></label>
+		<div class="col-sm-6">
+			<select ></select>
+			<span class="help-block"></span>
+		</div>
+	</div>
+	<div class="template-video form-group">
+		<label class="col-sm-2 control-label"></label>
+		<div class="col-sm-6">
+			<input type="text" class="form-control" placeholder="">
+			<span class="help-block"></span>
+		</div>
+	</div>
+	<div class="template-videoRef">
+		<label class="col-sm-2 control-label"></label>
+		<div class="col-sm-6">
+			<input type="hidden" class="form-control" placeholder="">
+			<a style="display:none" class="btn-view btn btn-primary" target="_blank">查看</a>
+			<button type="button" class="btn-sel btn btn-default">修改</button>
+			<span class="help-block"></span>
+		</div>
+	</div>
+</div>
+#end
+
+#macro(videoDialog)
+<div id="dialog-videoRef-edit" title="选择视频" style="display:none;">
+	<!--
+	<p class="validateTips">All form fields are required.</p>
+	-->
+
+	<form class="form-videoRef form-horizontal" role="form" style="">
+		<fieldset>
+			<label class="" for="group1">分组</label>
+			#videoGroupSel()
+			<label class="" for="titleLike">标题(模糊匹配)</label>
+			<input type="text" name="titleLike" id="titleLike" />
+			<label class="" for="status">状态</label>
+			<select name="status" id="status">
+				<option value="0">正常</option>
+				<!--
+				<option value="-1">解析失败</option>
+				-->
+			</select>
+			<button type="button" class="btn-query btn btn-primary">查询</button>
+			<input name="offset" value="0" type="hidden" class="form-control" >
+			<input name="rowCount" value="8" type="hidden" class="form-control" >
+			<div class="" style="margin-bottom: 10px;">
+				共<span class="page-total"></span>页,当前<span class="page-current"></span>页.
+				<button type="button" class="page-btn-prev btn btn-default">&lt;</button>
+				<button type="button" class="page-btn-next btn btn-default">&gt;</button>
+			</div>
+			<div class="table-responsive">
+				<table class="table table-bordered table-hover">
+					<thead>
+						<tr>
+							<th style="width: 2%;" class="">选择</th>
+							<th style="width: 12%;" class="">创建时间</th>
+							<th style="width: 15%;" class="">标题</th>
+						</tr>
+					</thead>
+					<tbody class="rowContainer">
+					</tbody>
+				</table>
+			</div>
+			<table style="display:none">
+				<tr class="rowTemplate">
+					<td class="c_op">
+						<button type="button" class="btn-sel btn btn-default"></button>
+					</td>
+					<td class="c_gmtCreate"></td>
+					<td class="c_title"></td>
+				</tr>
+			</table>
+			<!-- Allow form submission with keyboard without duplicating the dialog button -->
+			<input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+		</fieldset>
+	</form>
+</div>
+<script type="text/javascript">
+	$(document).ready(
+		function() {
+			var dialog = $('#dialog-videoRef-edit');
+			var rowContainer = $('.rowContainer', dialog);
+			var rowTemplate = $('.rowTemplate', dialog);
+			var queryForm = $('.form-videoRef', dialog);
+			var currentPageNo = 1;
+
+			$('.btn-query', queryForm).click(function(evt) {
+				queryForm.trigger({type: 'query'});
+			});
+
+			queryForm.on('query', function(evt) {
+				goto(1);
+			});
+
+			$('.page-btn-prev', dialog).click(function() {
+				goto(currentPageNo - 1);
+			});
+
+			$('.page-btn-next', dialog).click(function() {
+				goto(currentPageNo + 1);
+			});
+
+			function goto(pageNo) {
+				console.log('goto', pageNo);
+				rowContainer.empty();
+				currentPageNo = pageNo;
+				var count = parseInt($('input[name="rowCount"]', queryForm).val(), 10);
+				var offset = (pageNo - 1) * count;
+				$('input[name="offset"]', queryForm).val(offset);
+				$.getJSON(
+					'/video/query.json',
+					queryForm.serialize(),
+					function(result) {
+						console.log(result);
+
+						var totalPage = Math.floor(result.count / count);
+						var remain = result.count % count;
+						if(remain > 0) {
+							totalPage += 1;
+						}
+						$('.page-total', dialog).html(totalPage);
+						$('.page-current', dialog).html(pageNo);
+						if(pageNo < 2) {
+							$('.page-btn-prev', dialog).hide();
+						}else {
+							$('.page-btn-prev', dialog).show();
+						}
+						if(pageNo >= totalPage) {
+							$('.page-btn-next', dialog).hide();
+						}else {
+							$('.page-btn-next', dialog).show();
+						}
+
+						if(result.count > 0) {
+							$.each(result.data, function(i, e) {
+								var row = rowTemplate.clone();
+								$('.c_gmtCreate', row).html(e.gmtCreate);
+								$('.c_title', row).html(e.title);
+
+								var editLink = $('.c_edit', row);
+								editLink.attr('href', '/video/edit.htm?id=' + e.id);
+
+								var btnSel = $('.btn-sel', row);
+								btnSel.html(e.id);
+								btnSel.click(function(evt) {
+									evt.preventDefault();
+									var confCode = dialog.data('confCode');
+									console.log('sel:', e.id, confCode);
+
+									dialog.trigger({
+										type: 'confirmSel',
+										confCode: confCode,
+										confVal: e.id,
+										title: e.title,
+										duration: e.duration
+									});
+
+								});
+
+								row.appendTo(rowContainer);
+							});
+						}
+						console.log(rowContainer);
+					}
+				);
+			}
+		}
+	);
+</script>
+#end

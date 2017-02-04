@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <property name="logDir" value="/temp/yuntu_bops"/>
+
+    <appender name="COMMON" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${logDir}/bops.log</File>
+        <Encoding>UTF-8</Encoding>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${logDir}/task-%d{yyyy-MM-dd}-%i.log.gz</FileNamePattern>
+            <MaxHistory>10</MaxHistory>
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <MaxFileSize>100MB</MaxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>%d{yy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</Pattern>
+        </layout>
+    </appender>
+
+    <appender name="quartz" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${logDir}/quartz.log</File>
+        <Encoding>UTF-8</Encoding>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${logDir}quartz-%d{yyyy-MM-dd}-%i.log.gz</FileNamePattern>
+            <MaxHistory>3</MaxHistory>
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <MaxFileSize>100MB</MaxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>%d{yy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</Pattern>
+        </layout>
+    </appender>
+
+    <logger name="org.quartz" level="INFO" additivity="false">
+        <appender-ref ref="quartz" />
+    </logger>
+
+
+    <logger name="io.netty" level="INFO" additivity="false">
+        <appender-ref ref="quartz" />
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="COMMON"/>
+    </root>
+
+</configuration>
