@@ -8,6 +8,15 @@ public class WeixinUser {
     private String nickName;
     private String password;
     private String openId;
+    private String avatarUrl;
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
 
     public String getNickName() {
         return nickName;

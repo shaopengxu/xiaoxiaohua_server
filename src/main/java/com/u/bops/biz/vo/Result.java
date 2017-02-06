@@ -9,9 +9,21 @@ import java.util.Map;
  * User: jinsong
  */
 public class Result<T> {
+
     private int code;
     private String errorMessage;
     private T data;
+    private String type;
+    private String seq;
+
+    public static final String SEQ = "seq";
+    public static final String TYPE = "type";
+
+    public static final String TYPE_LOGIN = "1";
+    public static final String TYPE_PUBLISH_MESSAGE = "1001";
+    public static final String TYPE_RECEIVE_MESSAGE = "1002";
+    public static final String TYPE_READ_MESSAGE = "1003";
+    public static final String TYPE_ADD_FRIEND = "2001";
 
     public Result() {
     }
@@ -24,6 +36,12 @@ public class Result<T> {
 
     public static <R> Result<R> success(R data) {
         Result<R> r = new Result<>(ResultCode.OK, "", data);
+        return r;
+    }
+
+    public static <R> Result<R> success(R data, String type) {
+        Result<R> r = new Result<>(ResultCode.OK, "", data);
+        r.type = type;
         return r;
     }
 
@@ -80,5 +98,21 @@ public class Result<T> {
 
     public void setData(T data) {
         this.data = data;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getSeq() {
+        return seq;
+    }
+
+    public void setSeq(String seq) {
+        this.seq = seq;
     }
 }

@@ -173,7 +173,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 //                }
 //            });
             //ctx.close();
-        } else if (result.getCode() != Message.NO_REPLY) {
+        } else if (result.getCode() != ChatMessage.NO_REPLY) {
             ctx.channel().write(new TextWebSocketFrame(result.toString()));
         }*/
     }

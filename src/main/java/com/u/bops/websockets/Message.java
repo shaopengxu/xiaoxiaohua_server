@@ -24,32 +24,5 @@ public class Message {
 
 	public static int OK_CODE = 1;
 
-	public static String returnResult(int errorCode, String msg) {
-		JSONObject json = new JSONObject();
-		json.put("error_code", errorCode);
-		json.put("msg", msg);
-		return json.toString();
-	}
 
-	public static String returnResult(int errorCode, String msg, String api) {
-		JSONObject json = new JSONObject();
-		json.put("error_code", errorCode);
-		json.put("msg", msg);
-		json.put("api", api);
-		return json.toString();
-	}
-
-	public static JSONObject returnResultJson(int errorCode, String msg) {
-		JSONObject json = new JSONObject();
-		json.put("error_code", errorCode);
-		json.put("msg", msg);
-		return json;
-	}
-
-	public static <T> String returnSuccess(T data) {
-		JSONObject json = new JSONObject();
-		json.put("error_code", OK_CODE);
-		json.put("data", data);
-		return json.toString();
-	}
 }

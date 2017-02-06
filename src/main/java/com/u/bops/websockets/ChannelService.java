@@ -2,6 +2,7 @@ package com.u.bops.websockets;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.u.bops.biz.vo.Result;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.apache.commons.lang.StringUtils;

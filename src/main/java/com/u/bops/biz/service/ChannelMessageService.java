@@ -15,8 +15,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class ChannelMessageService {
 
-    public static Map<Long, Channel> channelMap = new HashMap<>();
-    public static Map<Long, Set<String>> projectClientMap = new ConcurrentHashMap<>();
+
+
+
 
 
 

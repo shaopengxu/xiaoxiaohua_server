@@ -1,14 +1,19 @@
 package com.u.bops.websockets;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.gson.*;
-import com.u.bops.biz.domain.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.u.bops.biz.domain.ChatMessage;
+import com.u.bops.biz.service.ChatMessageService;
+import com.u.bops.biz.service.WeixinUserService;
+import com.u.bops.biz.vo.Result;
 import com.u.bops.util.Pair;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import org.apache.commons.beanutils.BeanUtils;
+import io.netty.util.AttributeKey;
+import jdk.nashorn.internal.parser.JSONParser;
+import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,29 +22,28 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
-import java.net.InetSocketAddress;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Date;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 @Service
 public class HandlerEntry {
 
     private static final Logger logger = LoggerFactory
             .getLogger(HandlerEntry.class);
-    private static final long VALID_TIME_RANGE_IN_SECONDS = TimeUnit.HOURS
-            .toSeconds(2L);
 
-    private Map<String, WebsocketHandler> websocketHandlerMap = new ConcurrentHashMap<String, WebsocketHandler>();
+    private WeixinUserService weixinUserService;
 
-    private boolean dev = false;
+    private ChatMessageService chatMessageService;
 
-    public Map<String, Channel> channelMap = new ConcurrentHashMap<>();
-    public Map<String, Set<String>> projectClientMap = new ConcurrentHashMap<>();
+    public BlockingQueue<Pair<Result, Channel>> channelMsgBlockingQueue = new LinkedBlockingQueue<>();
 
+    public static final String ATTRIBUTEKEY_OPENID = "ATTRIBUTEKEY_OPENID";
+    public static final String FIELD_OPENID = "openId";
+    public static final String FIELD_PASSWORD = "password";
 
-
-    public BlockingQueue<Pair<Result, Channel>> channelBlockingQueue = new LinkedBlockingQueue<>();
-
+    public static AttributeKey<String> OPENID_KEY = AttributeKey
+            .valueOf(ATTRIBUTEKEY_OPENID);
 
     @Autowired
     private ThreadPoolTaskExecutor executor;
@@ -48,19 +52,14 @@ public class HandlerEntry {
 
     }
 
-    private long startTime = System.currentTimeMillis();
-
     @Scheduled(initialDelay = 10000, fixedDelay = 10000)
-    public void push() {
+    public void pushMsg() {
         while (true) {
             try {
-                Pair<Result, Channel> pair = channelBlockingQueue.take();
+                Pair<Result, Channel> pair = channelMsgBlockingQueue.take();
                 Result result = pair.getL();
                 Channel c = pair.getR();
-                if (System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(5)) {
-                    logger.info("channel blocking queue, size : " + channelBlockingQueue.size());
-                    startTime = System.currentTimeMillis();
-                }
+
                 if (result.getCode() != Message.NO_REPLY) {
                     c.writeAndFlush(new TextWebSocketFrame(result.toString()));
                 }
@@ -71,116 +70,80 @@ public class HandlerEntry {
     }
 
 
-    public void execute(final Channel c, final String request) {
-        //logger.info(request.substring(0,Math.min(request.length(), 30)));
+    public void execute(final Channel channel, final String request) {
+        // logger.info(request.substring(0,Math.min(request.length(), 30)));
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                long startTime = System.currentTimeMillis();
                 Result result = new Result();
                 String messageType = null;
                 try {
 
                     JsonParser jsonParser = new JsonParser();
                     JsonObject jsonObject = jsonParser.parse(request).getAsJsonObject();
-                    JsonElement je = jsonObject.get(MessageKeys.MESSAGE_TYPE);
+                    JsonElement je = jsonObject.get(Result.TYPE);
                     messageType = je != null ? je.getAsString() : null;
                     if (StringUtils.isBlank(messageType)) {
                         result.setCode(Message.API_NOT_EXIST);
-                        channelBlockingQueue.put(new Pair(result, c));
+                        channelMsgBlockingQueue.put(new Pair(result, channel));
                         return;
                     }
-                    result.setMsgType(messageType);
-                    if (jsonObject.has(MessageKeys.SEQ)) {
-                        String sequence = jsonObject.get(MessageKeys.SEQ).getAsString();
+                    result.setType(messageType);
+                    if (StringUtils.equals(Result.TYPE_LOGIN, messageType)) {
+                        //LOGIN
+                        String openId = channel.attr(OPENID_KEY).get();
+                        if (!StringUtils.isBlank(openId)) {
+                            //TODO 重复登录
+                        } else {
+                            openId = jsonObject.get(FIELD_OPENID).getAsString();
+                            String password = jsonObject.get(FIELD_PASSWORD).getAsString();
+                            boolean loginSuccess = weixinUserService.checkUserLogin(openId, password);
+                            if (loginSuccess) {
+                                channel.attr(OPENID_KEY).set(openId);
+                                //TODO 登录要push unread message
+                                chatMessageService.loginUserPushUnreadMessage(openId);
+                            }
+                        }
+                    } else {
+                        String openId = channel.attr(OPENID_KEY).get();
+                        if (openId == null) {
+                            result.setCode(Message.NOT_LOGIN);
+                            channelMsgBlockingQueue.put(new Pair(result, channel));
+                            return;
+                        }
+                        if (StringUtils.equals(messageType, Result.TYPE_PUBLISH_MESSAGE)) {
+                            ChatMessage chatMessage = new ChatMessage();
+                            getChatMessageFromJson(jsonObject.get("data").getAsJsonObject());
+                            chatMessage.setDate(new Date());
+                            chatMessageService.publishMessage(chatMessage);
+                        } else if (StringUtils.equals(messageType, Result.TYPE_READ_MESSAGE)) {
+                            chatMessageService.readMessage(openId, jsonObject.get("data").getAsJsonObject().get("fromOpenId").getAsString());
+                        } else if (StringUtils.equals(messageType, Result.TYPE_ADD_FRIEND)) {
+                            //TODO 添加好友
+                        }
+                    }
+                    if (jsonObject.has(Result.SEQ)) {
+                        String sequence = jsonObject.get(Result.SEQ).getAsString();
                         if (StringUtils.isNotBlank(sequence)) {
                             result.setSeq(sequence);
                         }
                     }
 
-                    result.setCode(Message.NO_REPLY);
                 } catch (Exception e) {
+                    logger.error("error", e);
                     result.setCode(Message.EXCEPTION_ERROR);
+                    try {
+                        channelMsgBlockingQueue.put(new Pair(result, channel));
+                    } catch (InterruptedException e1) {
+                        logger.error("error", e);
+                    }
                 }
-                long costTime = System.currentTimeMillis() - startTime;
-                logger.info("msgType : " + messageType + ", cost time : " + costTime);
             }
         });
     }
 
-    private void sendAskClientInfo(Channel c) {
-        Result result = new Result();
-        result.setMsgType("askclientinfo");
-        TextWebSocketFrame frame = new TextWebSocketFrame(result.toString());
-        c.writeAndFlush(frame);
-        return;
-    }
-
-
-
-    public BlockingQueue<Pair<Map, Channel>> channelMsgBlockingQueue = new LinkedBlockingQueue<>();
-
-    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
-    public void pushMsg(){
-        while (true) {
-            try {
-                Pair<Map, Channel> pair = channelMsgBlockingQueue.take();
-                Map result = pair.getL();
-                Channel c = pair.getR();
-                if(System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(5)){
-                    logger.info("channel blocking queue, size : " + channelBlockingQueue.size());
-                    startTime = System.currentTimeMillis();
-                }
-                c.writeAndFlush(new TextWebSocketFrame(new Gson().toJson(result)));
-                Thread.sleep(50);
-            } catch (Exception e) {
-                logger.error("e", e);
-            }
-        }
-    }
-
-    public BlockingQueue<Pair<ResultInfo, Channel>> channelResultInfoBlockingQueue = new LinkedBlockingQueue<>();
-
-    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
-    public void pushResultInfo(){
-        while (true) {
-            try {
-                Pair<ResultInfo, Channel> pair = channelResultInfoBlockingQueue.take();
-                ResultInfo result = pair.getL();
-                Channel c = pair.getR();
-                if(System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(5)){
-                    logger.info("channel blocking queue, size : " + channelBlockingQueue.size());
-                    startTime = System.currentTimeMillis();
-                }
-                c.writeAndFlush(new TextWebSocketFrame(new Gson().toJson(result)));
-                Thread.sleep(50);
-            } catch (Exception e) {
-                logger.error("e", e);
-            }
-        }
-    }
-
-    public void sendMsg(String puuid, String msgType) {
-        Set<String> set = projectClientMap.get(puuid);
-        if (set == null) {
-            return;
-        }
-        Map<String, Object> m = new HashMap<>();
-        m.put("msgType", msgType);
-
-        String s = new Gson().toJson(m);
-        for (Iterator<String> iterator = set.iterator(); iterator.hasNext(); ) {
-            String clientid = iterator.next();
-
-            Channel c = channelMap.get(clientid);
-            if (c != null && c.isActive()) {
-                try {
-                    channelMsgBlockingQueue.put(new Pair<Map, Channel>(m, c));
-                } catch (InterruptedException e) {
-                    logger.error("e", e);
-                }
-            }
-        }
+    private ChatMessage getChatMessageFromJson(JsonObject jsonObject) {
+        return new Gson().fromJson(jsonObject.toString(), ChatMessage.class);
     }
 
 
@@ -188,14 +151,6 @@ public class HandlerEntry {
         JsonParser jsonParser = new JsonParser();
         jsonParser.parse("abc");
 
-    }
-
-    public int getProjectClientCount(String uuid) {
-        Set<String> set = projectClientMap.get(uuid);
-        if (set == null) {
-            return 0;
-        }
-        return set.size();
     }
 
 }

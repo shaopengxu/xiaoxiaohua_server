@@ -1,7 +1,7 @@
 package com.u.bops.websockets;
 
 import com.google.gson.JsonObject;
-import com.u.bops.websockets.Result;
+import com.u.bops.biz.vo.Result;
 
 public abstract class WebsocketHandler {
 
