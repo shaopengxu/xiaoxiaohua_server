@@ -1,5 +1,7 @@
 package com.u.bops.biz.redis;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
@@ -8,44 +10,74 @@ import java.util.List;
 /**
  * Created by Shaopeng.Xu on 2017-02-06.
  */
+@Service
 public class RedisDao {
 
+    @Autowired
     private JedisPool jedisPool;
 
     public boolean lpush(String key, String value) {
         Jedis jedis = jedisPool.getResource();
-        return jedis.lpush(key, value) > 0;
+        try {
+            return jedis.lpush(key, value) > 0;
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
     }
 
     public long incr(String key) {
         Jedis jedis = jedisPool.getResource();
-        return jedis.incr(key);
+        try {
+            return jedis.incr(key);
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
     }
 
     public boolean hset(String key, String field, String value) {
         Jedis jedis = jedisPool.getResource();
-        jedis.hset(key, field, value);
+        try {
+            jedis.hset(key, field, value);
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
         return true;
     }
 
     public List<String> lrange(String key, long start, long end) {
         Jedis jedis = jedisPool.getResource();
-        return jedis.lrange(key, start, end);
+        try {
+            return jedis.lrange(key, start, end);
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
     }
 
     public long hincr(String key, String field) {
         Jedis jedis = jedisPool.getResource();
-        return jedis.hincrBy(key, field, 1);
+        try {
+            return jedis.hincrBy(key, field, 1);
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
     }
 
     public String hget(String key, String field) {
         Jedis jedis = jedisPool.getResource();
-        return jedis.hget(key, field);
+        try {
+            return jedis.hget(key, field);
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
     }
 
     public long lsize(String key) {
         Jedis jedis = jedisPool.getResource();
-        return jedis.llen(key);
+        try {
+            return jedis.llen(key);
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
     }
 
     /**
@@ -86,7 +118,11 @@ public class RedisDao {
 
     private String lindex(String key, long index) {
         Jedis jedis = jedisPool.getResource();
-        return jedis.lindex(key, index);
+        try {
+            return jedis.lindex(key, index);
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
     }
 
 }
