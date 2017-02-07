@@ -21,7 +21,25 @@ public class RedisDao {
         try {
             return jedis.lpush(key, value) > 0;
         } finally {
-            jedisPool.returnResource(jedis);
+            jedis.close();
+        }
+    }
+
+    public boolean rpush(String key, String value) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.rpush(key, value) > 0;
+        } finally {
+            jedis.close();
+        }
+    }
+
+    public boolean lrem(String key, int count, String value) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.lrem(key, count, value) > 0;
+        } finally {
+            jedis.close();
         }
     }
 
@@ -30,7 +48,7 @@ public class RedisDao {
         try {
             return jedis.incr(key);
         } finally {
-            jedisPool.returnResource(jedis);
+            jedis.close();
         }
     }
 
@@ -39,7 +57,7 @@ public class RedisDao {
         try {
             jedis.hset(key, field, value);
         } finally {
-            jedisPool.returnResource(jedis);
+            jedis.close();
         }
         return true;
     }
@@ -49,7 +67,7 @@ public class RedisDao {
         try {
             return jedis.lrange(key, start, end);
         } finally {
-            jedisPool.returnResource(jedis);
+            jedis.close();
         }
     }
 
@@ -58,7 +76,7 @@ public class RedisDao {
         try {
             return jedis.hincrBy(key, field, 1);
         } finally {
-            jedisPool.returnResource(jedis);
+            jedis.close();
         }
     }
 
@@ -67,7 +85,7 @@ public class RedisDao {
         try {
             return jedis.hget(key, field);
         } finally {
-            jedisPool.returnResource(jedis);
+            jedis.close();
         }
     }
 
@@ -76,7 +94,7 @@ public class RedisDao {
         try {
             return jedis.llen(key);
         } finally {
-            jedisPool.returnResource(jedis);
+            jedis.close();
         }
     }
 
@@ -121,7 +139,7 @@ public class RedisDao {
         try {
             return jedis.lindex(key, index);
         } finally {
-            jedisPool.returnResource(jedis);
+            jedis.close();
         }
     }
 

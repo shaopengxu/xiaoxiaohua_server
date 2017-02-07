@@ -12,6 +12,19 @@ public class FriendShip {
     private String friendNickName;
     private String friendImage;
 
+    /**
+     * 最近一次清空聊天记录的messageId
+     */
+    private long lasteleteMessageId = -1;
+
+    public long getLasteleteMessageId() {
+        return lasteleteMessageId;
+    }
+
+    public void setLasteleteMessageId(long lasteleteMessageId) {
+        this.lasteleteMessageId = lasteleteMessageId;
+    }
+
     public String getFriendOpenId() {
         return friendOpenId;
     }

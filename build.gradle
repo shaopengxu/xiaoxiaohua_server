@@ -68,7 +68,8 @@ dependencies {
     // The production code uses the SLF4J logging API at compile time
     compile 'org.slf4j:slf4j-api:1.7.7',
             'org.slf4j:jcl-over-slf4j:1.7.7',
-            'redis.clients:jedis:2.4.2',
+            'redis.clients:jedis:2.9.0',
+            'org.bouncycastle:bcprov-jdk15on:1.56',
             //'ch.qos.logback:logback-core:1.1.2',
             'ch.qos.logback:logback-classic:1.1.2',
             'org.apache.httpcomponents:httpclient:4.3.4',

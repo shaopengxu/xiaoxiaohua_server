@@ -12,8 +12,6 @@ import com.u.bops.util.Pair;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.AttributeKey;
-import jdk.nashorn.internal.parser.JSONParser;
-import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,8 +30,10 @@ public class HandlerEntry {
     private static final Logger logger = LoggerFactory
             .getLogger(HandlerEntry.class);
 
+    @Autowired
     private WeixinUserService weixinUserService;
 
+    @Autowired
     private ChatMessageService chatMessageService;
 
     public BlockingQueue<Pair<Result, Channel>> channelMsgBlockingQueue = new LinkedBlockingQueue<>();
@@ -100,27 +100,23 @@ public class HandlerEntry {
                             boolean loginSuccess = weixinUserService.checkUserLogin(openId, password);
                             if (loginSuccess) {
                                 channel.attr(OPENID_KEY).set(openId);
+                                weixinUserService.userOpenIdChannelMap.put(openId, channel);
                                 //TODO 登录要push unread message
-                                chatMessageService.loginUserPushUnreadMessage(openId);
+                                chatMessageService.pushUnreadMessage(openId);
                             }
                         }
-                    } else {
+                    } else if (StringUtils.equals(messageType, Result.TYPE_PUBLISH_MESSAGE)) {
                         String openId = channel.attr(OPENID_KEY).get();
                         if (openId == null) {
                             result.setCode(Message.NOT_LOGIN);
                             channelMsgBlockingQueue.put(new Pair(result, channel));
                             return;
                         }
-                        if (StringUtils.equals(messageType, Result.TYPE_PUBLISH_MESSAGE)) {
-                            ChatMessage chatMessage = new ChatMessage();
-                            getChatMessageFromJson(jsonObject.get("data").getAsJsonObject());
-                            chatMessage.setDate(new Date());
-                            chatMessageService.publishMessage(chatMessage);
-                        } else if (StringUtils.equals(messageType, Result.TYPE_READ_MESSAGE)) {
-                            chatMessageService.readMessage(openId, jsonObject.get("data").getAsJsonObject().get("fromOpenId").getAsString());
-                        } else if (StringUtils.equals(messageType, Result.TYPE_ADD_FRIEND)) {
-                            //TODO 添加好友
-                        }
+
+                        ChatMessage chatMessage = new ChatMessage();
+                        getChatMessageFromJson(jsonObject.get("data").getAsJsonObject());
+                        chatMessage.setDate(new Date());
+                        chatMessageService.publishMessage(chatMessage);
                     }
                     if (jsonObject.has(Result.SEQ)) {
                         String sequence = jsonObject.get(Result.SEQ).getAsString();

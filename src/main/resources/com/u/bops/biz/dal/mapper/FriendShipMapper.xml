@@ -17,7 +17,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.u.bops.biz.dal.mapper.UserMapper">
+<mapper namespace="com.u.bops.biz.dal.mapper.FriendShipMapper">
 
     <!--
   <cache />
@@ -34,7 +34,7 @@
         </where>
     </select>
 
-    <select id="queryByParam" parameterType="map" resultType="User">
+    <select id="queryByParam" parameterType="map" resultType="FriendShip">
         SELECT *
         FROM users
         <where>
@@ -50,7 +50,7 @@
         limit #{offset}, #{rowCount}
     </select>
 
-    <select id="getByParam" parameterType="map" resultType="User">
+    <select id="getByParam" parameterType="map" resultType="FriendShip">
         SELECT *
         FROM users
         <where>
@@ -65,7 +65,7 @@
         limit 1
     </select>
 
-    <select id="getByUserId" parameterType="Long" resultType="User">
+    <select id="getFriendShip" resultType="FriendShip">
         SELECT *
         FROM users
         <where>
@@ -77,30 +77,10 @@
         limit 1
     </select>
 
-    <select id="getByUserName" parameterType="String" resultType="User">
-        SELECT *
-        FROM users
-        <where>
-            state = 'A'
-            <if test="value != null">
-                and username = #{value}
-            </if>
-        </where>
-        limit 1
-    </select>
-
-    <update id="updateById" parameterType="User">
+    <update id="updateById" parameterType="FriendShip">
         update users
         SET
         username = #{username},
-        gmt_modify = now()
-        WHERE id = #{id}
-    </update>
-
-    <update id="updatePassword" parameterType="User">
-        update users
-        SET
-        password = #{password},
         gmt_modify = now()
         WHERE id = #{id}
     </update>
@@ -110,7 +90,15 @@
         where id = #{value}
     </delete>
 
-    <insert id="insert" parameterType="User" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+    <update id="setDelete" >
+        update users
+        SET
+        username = #{username},
+        gmt_modify = now()
+        WHERE id = #{id}
+    </update>
+
+    <insert id="insert" parameterType="FriendShip" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
         INSERT INTO users
         (username, password, company_id, user_type, gmt_create, gmt_modify)
         VALUES

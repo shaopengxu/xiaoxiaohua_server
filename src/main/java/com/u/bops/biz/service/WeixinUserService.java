@@ -6,6 +6,8 @@ import com.u.bops.biz.domain.WeixinUser;
 import com.u.bops.biz.vo.Result;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,19 +15,24 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by Shaopeng.Xu on 2017-02-06.
  */
+
+@Service
 public class WeixinUserService {
 
+    @Autowired
     private WeixinUserMapper weixinUserMapper;
 
-    public static Map<String, Channel> userOpenIdChannelMap = new ConcurrentHashMap<>();
+    public  Map<String, Channel> userOpenIdChannelMap = new ConcurrentHashMap<>();
 
-    public static Map<String, WeixinUser> weixinUserMap = new ConcurrentHashMap<>();
+    public  Map<String, WeixinUser> weixinUserMap = new ConcurrentHashMap<>();
 
     public WeixinUser getWeixinUser(String openId) {
         WeixinUser weixinUser = weixinUserMap.get(openId);
         if (weixinUser == null) {
             weixinUser = weixinUserMapper.getWeixinUser(openId);
-            weixinUserMap.put(openId, weixinUser);
+            if (weixinUser != null) {
+                weixinUserMap.put(openId, weixinUser);
+            }
         }
         return weixinUser;
     }
@@ -49,5 +56,9 @@ public class WeixinUserService {
 
     public boolean checkUserLogin(String openId, String password) {
         return true;
+    }
+
+    public void createWeixinUser(WeixinUser weixinUser) {
+        //TODO 增加用户
     }
 }

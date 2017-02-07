@@ -39,6 +39,8 @@
     <context:component-scan base-package="com.u.bops.biz.service"/>
 
     <context:component-scan base-package="com.u.bops.websockets"/>
+
+    <context:component-scan base-package="com.u.bops.biz.redis"/>
     
     <!--  定时器开关  开始-->
     <!--<task:annotation-driven/>-->
@@ -48,9 +50,9 @@
     <task:scheduler id="myScheduler" pool-size="10"/>
     <!--  定时器开关  结束-->
 
-    <!--
+
     <import resource="beans-dal.xml"/>
-    -->
+
 
     <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
         <property name="securityManager" ref="securityManager"/>
@@ -111,10 +113,10 @@
 
     <bean id="jedisPool" class="redis.clients.jedis.JedisPool"  scope="singleton">
         <constructor-arg index="0" ref="jedisPoolConfig" />
-        <constructor-arg index="1" value="127.0.0.1" />
-        <constructor-arg index="2" value="4303" />
+        <constructor-arg index="1" value="${bops.redis.hostName}" />
+        <constructor-arg index="2" value="${bops.redis.port}" />
         <constructor-arg index="3" value="2000" />
-        <constructor-arg index="4" value="abc=123" />
+        <constructor-arg index="4" value="${bops.redis.password}" />
         <constructor-arg index="5" value="1" />
     </bean>
 

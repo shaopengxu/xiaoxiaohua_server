@@ -47,15 +47,15 @@ import javax.annotation.PostConstruct;
  * </ul>
  */
 
-//@Service
+@Service
 public final class WebSocketServer {
 
     static int PORT = 8887;
 
-    //@Autowired
+    @Autowired
     private WebSocketServerInitializer webSocketServerInitializer;
 
-    //@PostConstruct
+    @PostConstruct
     public void init() throws Exception {
 
         EventLoopGroup bossGroup = new NioEventLoopGroup(2);

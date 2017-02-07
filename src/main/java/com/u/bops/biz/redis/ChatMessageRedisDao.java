@@ -1,6 +1,9 @@
 package com.u.bops.biz.redis;
 
 import com.u.bops.biz.domain.ChatMessage;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -9,8 +12,10 @@ import java.util.List;
 /**
  * Created by Shaopeng.Xu on 2017-02-06.
  */
+@Service
 public class ChatMessageRedisDao {
 
+    @Autowired
     private RedisDao redisDao;
 
     private String fromOpenId;
@@ -77,20 +82,20 @@ public class ChatMessageRedisDao {
         return chatMessage;
     }
 
-    public List<ChatMessage> getChatMessages(String openId, String lastMessageId, int size) {
-        String key = USER_CHAT + "_" + openId;
-
+    public List<ChatMessage> getChatMessages(String openId, String friendOpenId, String endMessageId, String beginMessageId, int size) {
+        String key = USER_CHAT + "_" + openId + "_" + friendOpenId;
         long toIndex = 0;
-        long fromIndex = 0;
-        if ("-1".equals(lastMessageId)) {
+        long fromIndex = StringUtils.equals("-1", beginMessageId) ? 0 :
+                redisDao.getIndexOfElementOfSortedList(key, beginMessageId);
+        if (StringUtils.equals("-1", endMessageId)) {
             toIndex = redisDao.lsize(key);
-            fromIndex = toIndex - size < 0 ? 0 : toIndex - size;
+            fromIndex = toIndex - size < fromIndex ? fromIndex : toIndex - size;
         } else {
-            toIndex = redisDao.getIndexOfElementOfSortedList(key, lastMessageId);
+            toIndex = redisDao.getIndexOfElementOfSortedList(key, endMessageId);
             if (toIndex <= 0) {
                 return new ArrayList<>();
             }
-            fromIndex = toIndex - size < 0 ? 0 : toIndex - size;
+            fromIndex = toIndex - size < fromIndex ? fromIndex : toIndex - size;
         }
         List<String> messageIds = redisDao.lrange(key, fromIndex, toIndex);
         List<ChatMessage> chatMessages = new ArrayList<>();
