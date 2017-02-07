@@ -5,9 +5,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by Shaopeng.Xu on 2017-02-06.
@@ -49,15 +47,30 @@ public class ChatMessageRedisDao {
         redisDao.hset(key, TYPE, chatMessage.getType());
 
         //lpush fromOpenid messageid
-        redisDao.lpush(USER_CHAT + "_" + chatMessage.getFromOpenId() + "_" + chatMessage.getToOpenId(), String.valueOf(chatMessage.getMessageId()));
+        redisDao.rpush(USER_CHAT + "_" + chatMessage.getFromOpenId() + "_" + chatMessage.getToOpenId(), String.valueOf(chatMessage.getMessageId()));
         //lpush toOpenid messageid
-        redisDao.lpush(USER_CHAT + "_" + chatMessage.getToOpenId() + "_" + chatMessage.getFromOpenId(), String.valueOf(chatMessage.getMessageId()));
+        redisDao.rpush(USER_CHAT + "_" + chatMessage.getToOpenId() + "_" + chatMessage.getFromOpenId(), String.valueOf(chatMessage.getMessageId()));
 
         return true;
     }
 
     public int getUnreadMessageSize(String openId) {
         return Integer.parseInt(redisDao.hget(USER_UNREAD_MESSAGE_SIZE, openId));
+    }
+
+    public List<ChatMessage> getUnreadChatMessages(String openId, String friendOpenId) {
+        String startMessageId = redisDao.hget(USER_UNREAD_MESSAGE_ID + "_" + openId, friendOpenId);
+        if(startMessageId == null || StringUtils.equals(startMessageId, "-1")){
+            return new ArrayList<>();
+        }
+        String key = USER_CHAT + "_" + openId + "_" + friendOpenId;
+        long index = redisDao.getIndexOfElementOfSortedList(key, startMessageId);
+        List<String> messgageIds = redisDao.lrange(key, index, -1);
+        List<ChatMessage> chatMessages = new ArrayList<>();
+        for (String messageId : messgageIds) {
+            chatMessages.add(getChatMessage(messageId));
+        }
+        return chatMessages;
     }
 
     public boolean updateUserUnreadMessage(String openId, String fromOpenId, long messageId) {
@@ -105,4 +118,33 @@ public class ChatMessageRedisDao {
         return chatMessages;
     }
 
+    public String getLastMessageId(String openId, String friendOpenId) {
+        String key = USER_CHAT + "_" + openId + "_" + friendOpenId;
+        long size = redisDao.lsize(key);
+        long index = size - 1;
+        if (index >= 0) {
+            return redisDao.lindex(key, index);
+        }
+        return null;
+    }
+
+    public  Map<String, List<ChatMessage>> getUnreadChatMessages(String openId) {
+        Map<String, String> map =  redisDao.hgetAll(USER_UNREAD_MESSAGE_ID + "_" + openId);
+        Map<String, List<ChatMessage>> result = new HashMap<>();
+        for (String friendOpenId : map.keySet()) {
+            String unreadMessageId = map.get(friendOpenId);
+            if (StringUtils.equals(unreadMessageId, "-1")) {
+                continue;
+            }
+            String key = USER_CHAT + "_" + openId + "_" + friendOpenId;
+            long index = redisDao.getIndexOfElementOfSortedList(key, unreadMessageId);
+            List<String> messgageIds = redisDao.lrange(key, index, -1);
+            List<ChatMessage> chatMessages = new ArrayList<>();
+            for (String messageId : messgageIds) {
+                chatMessages.add(getChatMessage(messageId));
+            }
+            result.put(friendOpenId, chatMessages);
+        }
+        return result;
+    }
 }

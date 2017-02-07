@@ -6,6 +6,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Shaopeng.Xu on 2017-02-06.
@@ -71,6 +72,8 @@ public class RedisDao {
         }
     }
 
+
+
     public long hincr(String key, String field) {
         Jedis jedis = jedisPool.getResource();
         try {
@@ -84,6 +87,15 @@ public class RedisDao {
         Jedis jedis = jedisPool.getResource();
         try {
             return jedis.hget(key, field);
+        } finally {
+            jedis.close();
+        }
+    }
+
+    public Map<String, String> hgetAll(String key) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.hgetAll(key);
         } finally {
             jedis.close();
         }
@@ -134,7 +146,7 @@ public class RedisDao {
         }
     }
 
-    private String lindex(String key, long index) {
+    public String lindex(String key, long index) {
         Jedis jedis = jedisPool.getResource();
         try {
             return jedis.lindex(key, index);

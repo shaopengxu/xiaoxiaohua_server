@@ -2,13 +2,16 @@ package com.u.bops.biz.service;
 
 import com.u.bops.biz.dal.mapper.WeixinUserMapper;
 import com.u.bops.biz.domain.ChatMessage;
+import com.u.bops.biz.domain.FriendShip;
 import com.u.bops.biz.domain.WeixinUser;
 import com.u.bops.biz.vo.Result;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,9 +25,9 @@ public class WeixinUserService {
     @Autowired
     private WeixinUserMapper weixinUserMapper;
 
-    public  Map<String, Channel> userOpenIdChannelMap = new ConcurrentHashMap<>();
+    public Map<String, Channel> userOpenIdChannelMap = new ConcurrentHashMap<>();
 
-    public  Map<String, WeixinUser> weixinUserMap = new ConcurrentHashMap<>();
+    public Map<String, WeixinUser> weixinUserMap = new ConcurrentHashMap<>();
 
     public WeixinUser getWeixinUser(String openId) {
         WeixinUser weixinUser = weixinUserMap.get(openId);
@@ -54,11 +57,27 @@ public class WeixinUserService {
         return true;
     }
 
+    /**
+     * 检查用户登录密码是否正确
+     *
+     * @param openId
+     * @param password
+     * @return
+     */
     public boolean checkUserLogin(String openId, String password) {
-        return true;
+        WeixinUser weixinUser = getWeixinUser(openId);
+        return StringUtils.equals(weixinUser.getPassword(), password);
     }
 
-    public void createWeixinUser(WeixinUser weixinUser) {
-        //TODO 增加用户
+    public boolean createWeixinUser(WeixinUser weixinUser) {
+        WeixinUser dbWeixinUser = getWeixinUser(weixinUser.getOpenId());
+        if (dbWeixinUser != null) {
+            return false;
+        }
+        return weixinUserMapper.insert(weixinUser) > 0;
+    }
+
+    public void pushUnreadMessage(Map<String, List<ChatMessage>> unreadMessages) {
+        //TODO
     }
 }

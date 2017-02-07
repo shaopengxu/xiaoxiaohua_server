@@ -1,6 +1,8 @@
 package com.u.bops.biz.domain;
 
 
+import java.util.List;
+
 /**
  * Created by Shaopeng.Xu on 2017-02-06.
  */
@@ -11,6 +13,15 @@ public class FriendShip {
     private boolean delete;
     private String friendNickName;
     private String friendImage;
+    private List<ChatMessage> unreadChatMessages;
+
+    public List<ChatMessage> getUnreadChatMessages() {
+        return unreadChatMessages;
+    }
+
+    public void setUnreadChatMessages(List<ChatMessage> unreadChatMessages) {
+        this.unreadChatMessages = unreadChatMessages;
+    }
 
     /**
      * 最近一次清空聊天记录的messageId

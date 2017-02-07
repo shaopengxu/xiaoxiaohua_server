@@ -3,14 +3,14 @@ package com.u.bops.biz.service;
 import com.u.bops.biz.dal.mapper.FriendShipMapper;
 import com.u.bops.biz.domain.ChatMessage;
 import com.u.bops.biz.domain.FriendShip;
-import com.u.bops.biz.domain.WeixinUser;
 import com.u.bops.biz.redis.ChatMessageRedisDao;
-import com.u.bops.biz.redis.RedisDao;
+import com.u.bops.biz.redis.FriendShipRedisDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Shaopeng.Xu on 2017-02-06.
@@ -24,6 +24,9 @@ public class ChatMessageService {
 
     @Autowired
     private FriendShipMapper friendShipMapper ;
+
+    @Autowired
+    private FriendShipRedisDao friendShipRedisDao;
 
     @Autowired
     private WeixinUserService weixinUserService;
@@ -56,14 +59,37 @@ public class ChatMessageService {
 
     public boolean pushUnreadMessage(String openId) {
 
+        List<String> friendOpenIds = friendShipRedisDao.getFriendOpenIds(openId);
+        List<FriendShip> friendShips = new ArrayList<>();
+        for (String friendOpenId : friendOpenIds) {
+            List<ChatMessage> chatMessages = chatMessageRedisDao.getUnreadChatMessages(openId, friendOpenId);
+            if (chatMessages.size() > 0) {
+                FriendShip friendShip = friendShipMapper.getFriendShip(openId, friendOpenId);
+                friendShip.setUnreadChatMessages(chatMessages);
+            }
+        }
+        Map<String, List<ChatMessage>> unreadChatMessages = chatMessageRedisDao.getUnreadChatMessages(openId);
+        weixinUserService.pushUnreadMessage(unreadChatMessages);
         return true;
     }
 
     public void askForMsgPush(String openId) {
-
+        pushUnreadMessage(openId);
     }
 
-    public void deleteChatMessages(String openId, String friendOpenId) {
+    public boolean deleteChatMessages(String openId, String friendOpenId) {
 
+        FriendShip friendShip = friendShipMapper.getFriendShip(openId, friendOpenId);
+        if (friendShip == null) {
+            return false;
+        }
+        String messageId = chatMessageRedisDao.getLastMessageId(openId, friendOpenId);
+        if (messageId == null) {
+            return false;
+        }
+        friendShip.setLasteleteMessageId(Long.parseLong(messageId));
+        friendShipMapper.updateById(friendShip);
+
+        return true;
     }
 }
