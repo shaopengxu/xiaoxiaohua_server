@@ -9,8 +9,10 @@ import io.netty.channel.Channel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,8 +54,20 @@ public class WeixinUserService {
         }
     }
 
+    /**
+     * 每隔一段时间清理用户
+     * @return
+     */
+    @Scheduled(initialDelay = 1000000, fixedDelay = 1000000)
     public boolean removeUsers() {
-        //TODO 定时清理不在线的user
+        for (Iterator<String> iterator = userOpenIdChannelMap.keySet().iterator();iterator.hasNext();) {
+            String openId = iterator.next();
+            if (!userOpenIdChannelMap.get(openId).isActive()) {
+                iterator.remove();
+                weixinUserMap.get(openId).setOverdue(true);
+                weixinUserMap.remove(openId);
+            }
+        }
         return true;
     }
 
@@ -77,7 +91,13 @@ public class WeixinUserService {
         return weixinUserMapper.insert(weixinUser) > 0;
     }
 
-    public void pushUnreadMessage(Map<String, List<ChatMessage>> unreadMessages) {
-        //TODO
+    public void pushUnreadMessage(String openId, Map<String, List<ChatMessage>> unreadMessages) {
+
+        Channel channel = userOpenIdChannelMap.get(openId);
+        if (channel != null && channel.isActive()) {
+            Result<Map<String, List<ChatMessage>>> message = Result.success(unreadMessages, Result.TYPE_PUBLISH_UNREAD_MESSAGE);
+            TextWebSocketFrame frame = new TextWebSocketFrame(message.toString());
+            channel.writeAndFlush(frame);
+        }
     }
 }

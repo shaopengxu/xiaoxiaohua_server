@@ -49,10 +49,8 @@ public class AES {
 		} catch (BadPaddingException e) {
 			e.printStackTrace();
 		} catch (NoSuchProviderException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;

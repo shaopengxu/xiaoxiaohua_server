@@ -14,6 +14,15 @@ public class WeixinUser {
     private String province;
     private String country;
     private String unionId;
+    private boolean overdue;
+
+    public boolean isOverdue() {
+        return overdue;
+    }
+
+    public void setOverdue(boolean overdue) {
+        this.overdue = overdue;
+    }
 
     public String getGender() {
         return gender;

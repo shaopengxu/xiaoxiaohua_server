@@ -23,6 +23,7 @@ public class Result<T> {
     public static final String TYPE_PUBLISH_MESSAGE = "1001";
     public static final String TYPE_RECEIVE_MESSAGE = "1002";
     public static final String TYPE_READ_MESSAGE = "1003";
+    public static final String TYPE_PUBLISH_UNREAD_MESSAGE = "1004";
     public static final String TYPE_ADD_FRIEND = "2001";
 
     public Result() {

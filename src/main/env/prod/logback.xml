@@ -18,7 +18,6 @@
         </layout>
     </appender>
 
-    <!-- TODO -->
     <appender name="quartz" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <File>${logDir}/quartz.log</File>
         <Encoding>UTF-8</Encoding>

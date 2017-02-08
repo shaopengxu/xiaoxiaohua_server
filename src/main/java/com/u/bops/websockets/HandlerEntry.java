@@ -93,7 +93,15 @@ public class HandlerEntry {
                         //LOGIN
                         String openId = channel.attr(OPENID_KEY).get();
                         if (!StringUtils.isBlank(openId)) {
-                            //TODO 重复登录
+
+                            String dataOpenId = jsonObject.get(FIELD_OPENID).getAsString();
+                            if (StringUtils.equals(openId, dataOpenId)) {
+                                logger.error("用户重复登录, openId = " + openId);
+                            }else{
+                                logger.error("用户登录异常，用不同openId登录, openId = " + openId + " ,another openId = " + dataOpenId);
+                                channel.attr(OPENID_KEY).remove();
+                                channel.close();
+                            }
                         } else {
                             openId = jsonObject.get(FIELD_OPENID).getAsString();
                             String password = jsonObject.get(FIELD_PASSWORD).getAsString();
@@ -101,7 +109,6 @@ public class HandlerEntry {
                             if (loginSuccess) {
                                 channel.attr(OPENID_KEY).set(openId);
                                 weixinUserService.userOpenIdChannelMap.put(openId, channel);
-                                //TODO 登录要push unread message
                                 chatMessageService.pushUnreadMessage(openId);
                             }
                         }

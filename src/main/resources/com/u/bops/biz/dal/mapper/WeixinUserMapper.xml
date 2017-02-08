@@ -25,76 +25,66 @@
 
     <select id="countByParam" parameterType="map" resultType="int">
         SELECT count(*)
-        FROM users
+        FROM weixin_user
         <where>
-            state = 'A'
-            <if test="username != null">
-                and username = #{username}
-            </if>
+            deleted = 0
         </where>
     </select>
 
     <select id="queryByParam" parameterType="map" resultType="WeixinUser">
         SELECT *
-        FROM users
+        FROM weixin_user
         <where>
-            state = 'A'
-            <if test="username != null">
-                and username = #{username}
-            </if>
-            <if test="companyId != null">
-                and company_id = #{companyId}
-            </if>
+            deleted = 0
         </where>
-        order by id desc
-        limit #{offset}, #{rowCount}
     </select>
 
-    <select id="getByParam" parameterType="map" resultType="WeixinUser">
+    <select id="getByParam" resultType="WeixinUser">
         SELECT *
-        FROM users
+        FROM weixin_user
         <where>
-            state = 'A'
-            <if test="id != null">
-                and id = #{id}
-            </if>
-            <if test="username != null">
-                and username = #{username}
+            deleted = 0
+            <if test="openId != null">
+                and open_id = #{openId}
             </if>
         </where>
         limit 1
     </select>
 
-    <select id="getWeixinUser" parameterType="Long" resultType="WeixinUser">
+    <select id="getWeixinUser" resultType="WeixinUser">
         SELECT *
-        FROM users
+        FROM weixin_user
         <where>
-            state = 'A'
-            <if test="value != null">
-                and openId = #{value}
+            deleted = 0
+            <if test="openId != null">
+                and open_id = #{openId}
             </if>
         </where>
-        limit 1
     </select>
 
     <update id="updateById" parameterType="WeixinUser">
-        update users
+        update weixin_user
         SET
-        username = #{username},
-        gmt_modify = now()
-        WHERE id = #{id}
+        nick_name = #{nickName},
+        update_time = now()
+        WHERE open_id = #{openId}
     </update>
 
 
-    <delete id="deleteById" parameterType="long">
-        delete from users
-        where id = #{value}
-    </delete>
+    <update id="deleteById" >
+        update weixin_user
+        SET
+        deleted = 1,
+        update_time = now()
+        WHERE open_id = #{openId}
+    </update>
 
-    <insert id="insert" parameterType="WeixinUser" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
-        INSERT INTO users
-        (username, password, company_id, user_type, gmt_create, gmt_modify)
+    <insert id="insert" parameterType="WeixinUser">
+        INSERT INTO `weixin_user`
+        (`open_id`,`union_id`,`nick_name`,`password`,`country`,`province`,`city`,
+              `avatar_url`,`gender`,`create_time`,`update_time`,`deleted`)
         VALUES
-        (#{username}, #{password}, #{companyId}, #{userType}, now(), now())
+        (#{openId},#{unionId},#{nickName},#{password},#{country},#{province},#{city},
+            #{avatarUrl},#{gender},now(),now(),#{deleted})
     </insert>
 </mapper>

@@ -86,12 +86,13 @@ public class ChatMessageRedisDao {
     public ChatMessage getChatMessage(String messageId) {
         String key = CHAT + "_" + messageId;
         ChatMessage chatMessage = new ChatMessage();
+        Map<String, String> map = redisDao.hgetAll(key);
         chatMessage.setMessageId(Long.parseLong(messageId));
-        chatMessage.setContent(redisDao.hget(key, CONTENT));
-        chatMessage.setDate(new Date(Long.parseLong(redisDao.hget(key, DATE))));
-        chatMessage.setFromOpenId(redisDao.hget(key, FROM_OPENID));
-        chatMessage.setToOpenId(redisDao.hget(key, TO_OPENID));
-        chatMessage.setType(redisDao.hget(key, TYPE));
+        chatMessage.setContent(map.get(CONTENT));
+        chatMessage.setDate(new Date(Long.parseLong(map.get(DATE))));
+        chatMessage.setFromOpenId(map.get(FROM_OPENID));
+        chatMessage.setToOpenId(map.get(TO_OPENID));
+        chatMessage.setType(map.get(TYPE));
         return chatMessage;
     }
 

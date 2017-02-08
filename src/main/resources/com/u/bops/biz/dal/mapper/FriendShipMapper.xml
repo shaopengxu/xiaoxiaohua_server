@@ -25,83 +25,98 @@
 
     <select id="countByParam" parameterType="map" resultType="int">
         SELECT count(*)
-        FROM users
+        FROM friend_ship
         <where>
-            state = 'A'
-            <if test="username != null">
-                and username = #{username}
-            </if>
+            deleted = 0
         </where>
     </select>
 
     <select id="queryByParam" parameterType="map" resultType="FriendShip">
         SELECT *
-        FROM users
+        FROM friend_ship
         <where>
-            state = 'A'
-            <if test="username != null">
-                and username = #{username}
-            </if>
-            <if test="companyId != null">
-                and company_id = #{companyId}
-            </if>
+            deleted = 0
         </where>
-        order by id desc
-        limit #{offset}, #{rowCount}
     </select>
 
     <select id="getByParam" parameterType="map" resultType="FriendShip">
         SELECT *
-        FROM users
+        FROM friend_ship
         <where>
-            state = 'A'
-            <if test="id != null">
-                and id = #{id}
+            deleted = 0
+            <if test="openId != null">
+                and open_id = #{openId}
             </if>
-            <if test="username != null">
-                and username = #{username}
+            <if test="friendOpenId != null">
+                and friend_open_id = #{friendOpenId}
             </if>
         </where>
-        limit 1
     </select>
 
     <select id="getFriendShip" resultType="FriendShip">
         SELECT *
-        FROM users
+        FROM friend_ship
         <where>
-            state = 'A'
-            <if test="value != null">
-                and id = #{value}
+            deleted = 0
+            <if test="openId != null">
+                and open_id = #{openId}
+            </if>
+            <if test="friendOpenId != null">
+                and friend_open_id = #{friendOpenId}
             </if>
         </where>
-        limit 1
     </select>
 
     <update id="updateById" parameterType="FriendShip">
-        update users
+        update friend_ship
         SET
-        username = #{username},
-        gmt_modify = now()
+        <if test="friendNickName != null">
+            friend_nick_name = #{friendNickName},
+        </if>
+        <if test="friendImage != null" >
+            friend_image = #{friendImage},
+        </if>
+        update_time = now()
         WHERE id = #{id}
     </update>
 
-    <delete id="deleteById" parameterType="long">
-        delete from users
-        where id = #{value}
-    </delete>
+    <update id="deleteById" >
+        update friend_ship
+        SET
+        deleted = 1,
+        update_time = now()
+        <where>
+            deleted = 0
+            <if test="openId != null">
+                and open_id = #{openId}
+            </if>
+            <if test="friendOpenId != null">
+                and friend_open_id = #{friendOpenId}
+            </if>
+        </where>
+    </update>
 
     <update id="setDelete" >
-        update users
+        update friend_ship
         SET
-        username = #{username},
-        gmt_modify = now()
-        WHERE id = #{id}
+        deleted = 1,
+        update_time = now()
+        <where>
+            deleted = 0
+            <if test="openId != null">
+                and open_id = #{openId}
+            </if>
+            <if test="friendOpenId != null">
+                and friend_open_id = #{friendOpenId}
+            </if>
+        </where>
     </update>
 
     <insert id="insert" parameterType="FriendShip" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
-        INSERT INTO users
-        (username, password, company_id, user_type, gmt_create, gmt_modify)
+        INSERT INTO `friend_ship`
+        (`open_id`,`friend_open_id`,`deleted`,`friend_nick_name`,`friend_image`,`create_time`,`update_time`)
         VALUES
-        (#{username}, #{password}, #{companyId}, #{userType}, now(), now())
+        (#{openId},#{friendOpenId},#{deleted},#{friendNickName},#{friendImage},now(),now())
+
     </insert>
 </mapper>

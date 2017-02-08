@@ -10,7 +10,7 @@ public class FriendShip {
 
     private String openId;
     private String friendOpenId;
-    private boolean delete;
+    private boolean deleted;
     private String friendNickName;
     private String friendImage;
     private List<ChatMessage> unreadChatMessages;
@@ -44,12 +44,12 @@ public class FriendShip {
         this.friendOpenId = friendOpenId;
     }
 
-    public boolean isDelete() {
-        return delete;
+    public boolean isDeleted() {
+        return deleted;
     }
 
-    public void setDelete(boolean delete) {
-        this.delete = delete;
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 
     public String getFriendNickName() {

@@ -1,6 +1,9 @@
 package com.u.bops.biz.vo;
 
 import com.u.bops.biz.domain.WeixinUser;
+import org.apache.commons.beanutils.BeanUtils;
+
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * Created by Shaopeng.Xu on 2017-02-07.
@@ -111,9 +114,16 @@ public class WeixinUserInfo {
     }
 
     public WeixinUser toWeixinUser() {
-        //TODO
+        WeixinUser weixinUser = new WeixinUser();
+        try {
+            BeanUtils.copyProperties(weixinUser, this);
+            return weixinUser;
+        } catch (Exception e) {
+
+        }
         return null;
     }
+
 }
 
 

@@ -50,7 +50,7 @@ public class ChatMessageService {
 
     public List<ChatMessage> getFriendChatMessages(String openId, String friendOpenId, String endMessageId, int size) {
         FriendShip friendShip = friendShipMapper.getFriendShip(openId, friendOpenId);
-        if (friendShip == null || friendShip.isDelete()) {
+        if (friendShip == null || friendShip.isDeleted()) {
             return new ArrayList<>();
         }
         String beginMessageId = String.valueOf(friendShip.getLasteleteMessageId());
@@ -69,7 +69,7 @@ public class ChatMessageService {
             }
         }
         Map<String, List<ChatMessage>> unreadChatMessages = chatMessageRedisDao.getUnreadChatMessages(openId);
-        weixinUserService.pushUnreadMessage(unreadChatMessages);
+        weixinUserService.pushUnreadMessage(openId, unreadChatMessages);
         return true;
     }
 
