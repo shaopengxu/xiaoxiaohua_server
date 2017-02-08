@@ -59,7 +59,7 @@ public class WeixinUserService {
      * @return
      */
     @Scheduled(initialDelay = 1000000, fixedDelay = 1000000)
-    public boolean removeUsers() {
+    public void removeUsers() {
         for (Iterator<String> iterator = userOpenIdChannelMap.keySet().iterator();iterator.hasNext();) {
             String openId = iterator.next();
             if (!userOpenIdChannelMap.get(openId).isActive()) {
@@ -68,7 +68,6 @@ public class WeixinUserService {
                 weixinUserMap.remove(openId);
             }
         }
-        return true;
     }
 
     /**
