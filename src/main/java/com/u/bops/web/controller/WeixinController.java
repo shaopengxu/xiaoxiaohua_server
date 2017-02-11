@@ -8,6 +8,8 @@ import com.u.bops.biz.service.ChatMessageService;
 import com.u.bops.biz.service.FriendShipService;
 import com.u.bops.biz.service.WeixinUserService;
 import com.u.bops.biz.vo.Result;
+import com.u.bops.util.HttpUtils;
+import com.u.bops.util.Pair;
 import com.u.bops.websockets.Message;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
@@ -21,8 +23,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.u.bops.util.AES;
 
 import javax.servlet.http.HttpSession;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.management.OperatingSystemMXBean;
+import java.net.URISyntaxException;
 import java.security.InvalidAlgorithmParameterException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,15 +54,50 @@ public class WeixinController {
     @Autowired
     private ChatMessageService chatMessageService;
 
-    @RequestMapping(value = "/check_user_info", produces = "application/json")
+    private String getSessionKeyUrl = "https://api.weixin.qq.com/sns/jscode2session?appid=APPID&secret=SECRET&js_code={code}&grant_type=authorization_code";
+
+    @RequestMapping(value = "/check_user_info1", produces = "application/json")
     public
     @ResponseBody
     Result<?> checkUserInfo(@RequestParam(required = true, value = "encryptedData") String encryptedData,
                             @RequestParam(required = true, value = "iv") String iv,
-                            @RequestParam(required = true, value = "sessionKey") String sessionKey, HttpSession httpSession) {
+                            @RequestParam(required = true, value = "code") String code, HttpSession httpSession) {
 
+        //TODO 通过code获取sessionKey
+        String url = getSessionKeyUrl.replace("{code}", code);
+        try {
+            Pair<Integer, String> result =  HttpUtils.get(url, new HashMap<String, String>(), "UTF-8", new HashMap<String, String>());
+        } catch (IOException e) {
+            logger.error("", e);
+        } catch (URISyntaxException e) {
+            logger.error("", e);
+        }
+        String sessionKey = "";
         Map<String, Object> result = new HashMap<>();
         WeixinUserInfo weixinUserInfo = getUserInfoFromEncryptedData(sessionKey, iv, encryptedData);
+        if (weixinUserInfo != null) {
+            result.put("openId", weixinUserInfo.getOpenId());
+            result.put("isFirst", weixinUserService.getWeixinUser(weixinUserInfo.getOpenId()) == null);
+            httpSession.setAttribute("userInfo", weixinUserInfo);
+            return Result.success(result);
+        }
+        return Result.error(Message.EXCEPTION_ERROR, "格式不正确");
+    }
+
+    @RequestMapping(value = "/check_user_info", produces = "application/json")
+    public
+    @ResponseBody
+    Result<?> checkUserInfoOfTest(@RequestParam(required = true, value = "encryptedData") String encryptedData,
+                            @RequestParam(required = true, value = "iv") String iv,
+                            @RequestParam(required = true, value = "code") String code,
+                            @RequestParam(required = true, value = "nickName") String nickName,HttpSession httpSession) {
+
+
+        WeixinUserInfo weixinUserInfo = new WeixinUserInfo();
+        weixinUserInfo.setNickName(nickName);
+        weixinUserInfo.setOpenId(nickName);
+
+        Map<String, Object> result = new HashMap<>();
         if (weixinUserInfo != null) {
             result.put("openId", weixinUserInfo.getOpenId());
             result.put("isFirst", weixinUserService.getWeixinUser(weixinUserInfo.getOpenId()) == null);
@@ -139,6 +178,7 @@ public class WeixinController {
             return Result.error(Message.INVALID, "获取不到用户信息");
         }
         List<FriendShip> friendShips = friendShipService.getFriends(weixinUser.getOpenId());
+        //TODO unreadMessageSize、 最近聊天时间、最后一句对话
         return Result.success(friendShips);
     }
 
