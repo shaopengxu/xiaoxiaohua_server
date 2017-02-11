@@ -112,7 +112,7 @@ public class HandlerEntry {
                                 chatMessageService.pushUnreadMessage(openId);
                             }
                         }
-                    } else if (StringUtils.equals(messageType, Result.TYPE_PUBLISH_MESSAGE)) {
+                    } else if (StringUtils.equals(messageType, Result.TYPE_PUSH_MESSAGE)) {
                         String openId = channel.attr(OPENID_KEY).get();
                         if (openId == null) {
                             result.setCode(Message.NOT_LOGIN);
@@ -121,7 +121,7 @@ public class HandlerEntry {
                         }
 
                         ChatMessage chatMessage = new ChatMessage();
-                        getChatMessageFromJson(jsonObject.get("data").getAsJsonObject());
+                        chatMessage = getChatMessageFromJson(jsonObject.get("data").getAsJsonObject());
                         chatMessage.setDate(new Date());
                         chatMessageService.publishMessage(chatMessage);
                     }

@@ -15,6 +15,15 @@ public class WeixinUser {
     private String country;
     private String unionId;
     private boolean overdue;
+    private boolean deleted;
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
 
     public boolean isOverdue() {
         return overdue;

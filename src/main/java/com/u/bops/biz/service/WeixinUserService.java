@@ -2,7 +2,6 @@ package com.u.bops.biz.service;
 
 import com.u.bops.biz.dal.mapper.WeixinUserMapper;
 import com.u.bops.biz.domain.ChatMessage;
-import com.u.bops.biz.domain.FriendShip;
 import com.u.bops.biz.domain.WeixinUser;
 import com.u.bops.biz.vo.Result;
 import io.netty.channel.Channel;
@@ -42,16 +41,27 @@ public class WeixinUserService {
         return weixinUser;
     }
 
+    /**
+     * 发送聊天
+     * @param chatMessage
+     * @return
+     */
     public boolean sendMessage(ChatMessage chatMessage) {
         Channel channel = userOpenIdChannelMap.get(chatMessage.getToOpenId());
         if (channel != null && channel.isActive()) {
-            Result<ChatMessage> message = Result.success(chatMessage, Result.TYPE_PUBLISH_MESSAGE);
+            Result<ChatMessage> message = Result.success(chatMessage, Result.TYPE_PUSH_MESSAGE);
             TextWebSocketFrame frame = new TextWebSocketFrame(message.toString());
             channel.writeAndFlush(frame);
-            return true;
-        } else {
-            return false;
         }
+
+        //自己也发送一条消息
+        channel = userOpenIdChannelMap.get(chatMessage.getFromOpenId());
+        if (channel != null && channel.isActive()) {
+            Result<ChatMessage> message = Result.success(chatMessage, Result.TYPE_PUSH_MESSAGE);
+            TextWebSocketFrame frame = new TextWebSocketFrame(message.toString());
+            channel.writeAndFlush(frame);
+        }
+        return true;
     }
 
     /**
@@ -94,7 +104,7 @@ public class WeixinUserService {
 
         Channel channel = userOpenIdChannelMap.get(openId);
         if (channel != null && channel.isActive()) {
-            Result<Map<String, List<ChatMessage>>> message = Result.success(unreadMessages, Result.TYPE_PUBLISH_UNREAD_MESSAGE);
+            Result<Map<String, List<ChatMessage>>> message = Result.success(unreadMessages, Result.TYPE_PUSH_UNREAD_MESSAGE);
             TextWebSocketFrame frame = new TextWebSocketFrame(message.toString());
             channel.writeAndFlush(frame);
         }

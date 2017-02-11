@@ -1,6 +1,7 @@
 package com.u.bops.biz.dal.mapper;
 
 import com.u.bops.biz.domain.WeixinUser;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 import java.util.Map;
@@ -10,7 +11,7 @@ import java.util.Map;
  */
 public interface WeixinUserMapper extends GeneralMapper<WeixinUser>  {
 
-    public WeixinUser getWeixinUser(String openId);
+    public WeixinUser getWeixinUser(@Param("openId") String openId);
 
 }
 

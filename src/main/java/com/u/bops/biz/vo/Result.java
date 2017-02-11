@@ -1,6 +1,7 @@
 package com.u.bops.biz.vo;
 
 import com.u.bops.common.constants.ResultCode;
+import net.sf.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,10 +21,12 @@ public class Result<T> {
     public static final String TYPE = "type";
 
     public static final String TYPE_LOGIN = "1";
-    public static final String TYPE_PUBLISH_MESSAGE = "1001";
-    public static final String TYPE_RECEIVE_MESSAGE = "1002";
-    public static final String TYPE_READ_MESSAGE = "1003";
-    public static final String TYPE_PUBLISH_UNREAD_MESSAGE = "1004";
+
+    /**
+     * 推送聊天信息
+     */
+    public static final String TYPE_PUSH_MESSAGE = "1001";
+    public static final String TYPE_PUSH_UNREAD_MESSAGE = "1002";
     public static final String TYPE_ADD_FRIEND = "2001";
 
     public Result() {
@@ -115,5 +118,9 @@ public class Result<T> {
 
     public void setSeq(String seq) {
         this.seq = seq;
+    }
+
+    public String toString() {
+        return JSONObject.fromObject(this).toString();
     }
 }

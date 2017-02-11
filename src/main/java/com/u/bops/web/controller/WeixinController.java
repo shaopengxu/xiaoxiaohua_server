@@ -12,6 +12,7 @@ import com.u.bops.util.HttpUtils;
 import com.u.bops.util.Pair;
 import com.u.bops.websockets.Message;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +29,8 @@ import java.io.UnsupportedEncodingException;
 import java.lang.management.OperatingSystemMXBean;
 import java.net.URISyntaxException;
 import java.security.InvalidAlgorithmParameterException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.microsoft.schemas.office.x2006.encryption.STCipherAlgorithm.AES;
 
@@ -45,6 +44,8 @@ public class WeixinController {
 
     private static final Logger logger = LoggerFactory.getLogger(WeixinController.class);
 
+    private Map<String, Map<String, Object>> sessionMap = new ConcurrentHashMap<>();
+
     @Autowired
     private WeixinUserService weixinUserService;
 
@@ -56,17 +57,41 @@ public class WeixinController {
 
     private String getSessionKeyUrl = "https://api.weixin.qq.com/sns/jscode2session?appid=APPID&secret=SECRET&js_code={code}&grant_type=authorization_code";
 
+    private Object getSessionAttribute(String sessionId, String attribute) {
+        Map<String, Object> session = sessionMap.get(sessionId);
+        if (session == null) {
+            return null;
+        }
+        return session.get(attribute);
+    }
+
+    private void putSessionAttribute(String sessionId, String attribute, Object value) {
+        Map<String, Object> session = sessionMap.get(sessionId);
+        if (session == null) {
+            session = new HashedMap();
+            sessionMap.put(sessionId, session);
+        }
+        session.put(attribute, value);
+    }
+
+    private void removeSessionAttribute(String sessionId, String attribute) {
+        Map<String, Object> session = sessionMap.get(sessionId);
+        if (session != null) {
+            session.remove(attribute);
+        }
+    }
+
     @RequestMapping(value = "/check_user_info1", produces = "application/json")
     public
     @ResponseBody
     Result<?> checkUserInfo(@RequestParam(required = true, value = "encryptedData") String encryptedData,
                             @RequestParam(required = true, value = "iv") String iv,
-                            @RequestParam(required = true, value = "code") String code, HttpSession httpSession) {
+                            @RequestParam(required = true, value = "code") String code) {
 
         //TODO 通过code获取sessionKey
         String url = getSessionKeyUrl.replace("{code}", code);
         try {
-            Pair<Integer, String> result =  HttpUtils.get(url, new HashMap<String, String>(), "UTF-8", new HashMap<String, String>());
+            Pair<Integer, String> result = HttpUtils.get(url, new HashMap<String, String>(), "UTF-8", new HashMap<String, String>());
         } catch (IOException e) {
             logger.error("", e);
         } catch (URISyntaxException e) {
@@ -78,7 +103,10 @@ public class WeixinController {
         if (weixinUserInfo != null) {
             result.put("openId", weixinUserInfo.getOpenId());
             result.put("isFirst", weixinUserService.getWeixinUser(weixinUserInfo.getOpenId()) == null);
-            httpSession.setAttribute("userInfo", weixinUserInfo);
+
+            String sessionId = String.valueOf(System.nanoTime());
+            result.put("sessionId", sessionId);
+            putSessionAttribute(sessionId, "userInfo", weixinUserInfo);
             return Result.success(result);
         }
         return Result.error(Message.EXCEPTION_ERROR, "格式不正确");
@@ -88,9 +116,9 @@ public class WeixinController {
     public
     @ResponseBody
     Result<?> checkUserInfoOfTest(@RequestParam(required = true, value = "encryptedData") String encryptedData,
-                            @RequestParam(required = true, value = "iv") String iv,
-                            @RequestParam(required = true, value = "code") String code,
-                            @RequestParam(required = true, value = "nickName") String nickName,HttpSession httpSession) {
+                                  @RequestParam(required = true, value = "iv") String iv,
+                                  @RequestParam(required = true, value = "code") String code,
+                                  @RequestParam(required = true, value = "nickName") String nickName) {
 
 
         WeixinUserInfo weixinUserInfo = new WeixinUserInfo();
@@ -101,7 +129,11 @@ public class WeixinController {
         if (weixinUserInfo != null) {
             result.put("openId", weixinUserInfo.getOpenId());
             result.put("isFirst", weixinUserService.getWeixinUser(weixinUserInfo.getOpenId()) == null);
-            httpSession.setAttribute("userInfo", weixinUserInfo);
+
+            String sessionId = String.valueOf(System.nanoTime());
+            result.put("sessionId", sessionId);
+            putSessionAttribute(sessionId, "userInfo", weixinUserInfo);
+
             return Result.success(result);
         }
         return Result.error(Message.EXCEPTION_ERROR, "格式不正确");
@@ -130,9 +162,9 @@ public class WeixinController {
     @RequestMapping(value = "/register", produces = "application/json")
     public
     @ResponseBody
-    Result<?> register(String password, HttpSession session) {
+    Result<?> register(String password, String sessionId) {
 
-        WeixinUserInfo weixinUserInfo = (WeixinUserInfo) session.getAttribute("userInfo");
+        WeixinUserInfo weixinUserInfo = (WeixinUserInfo) getSessionAttribute(sessionId, "userInfo");
         if (weixinUserInfo == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
         }
@@ -142,26 +174,26 @@ public class WeixinController {
         weixinUserService.createWeixinUser(weixinUser);
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
+        putSessionAttribute(sessionId, "loginUser", weixinUser);
         return Result.success(result);
     }
 
     @RequestMapping(value = "/login", produces = "application/json")
     public
     @ResponseBody
-    Result<?> login(String password, HttpSession session) {
-        WeixinUserInfo weixinUserInfo = (WeixinUserInfo) session.getAttribute("userInfo");
+    Result<?> login(String password, String sessionId) {
+        WeixinUserInfo weixinUserInfo = (WeixinUserInfo) getSessionAttribute(sessionId, "userInfo");
         if (weixinUserInfo == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
         }
-        session.removeAttribute("userInfo");
+        removeSessionAttribute(sessionId, "userInfo");
         WeixinUser weixinUser = weixinUserService.getWeixinUser(weixinUserInfo.getOpenId());
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "用户不存在");
         }
         boolean success = false;
         if (StringUtils.equals(password, weixinUser.getPassword())) {
-
-            session.setAttribute("loginUser", weixinUser);
+            putSessionAttribute(sessionId, "loginUser", weixinUser);
             success = true;
         }
         Map<String, Object> result = new HashMap<>();
@@ -172,8 +204,8 @@ public class WeixinController {
     @RequestMapping(value = "/get_friends", produces = "application/json")
     public
     @ResponseBody
-    Result<?> getFriends(HttpSession session) {
-        WeixinUser weixinUser = (WeixinUser) session.getAttribute("loginUser");
+    Result<?> getFriends(String sessionId) {
+        WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
         }
@@ -182,21 +214,37 @@ public class WeixinController {
         return Result.success(friendShips);
     }
 
-    @RequestMapping(value = "/add_friend", produces = "application/json")
+    @RequestMapping(value = "/get_friend_size", produces = "application/json")
     public
     @ResponseBody
-    Result<?> addFriend(String friendOpenId, HttpSession session) {
-
-        WeixinUser weixinUser = (WeixinUser) session.getAttribute("loginUser");
+    Result<?> getFriendSize(String sessionId) {
+        WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
         }
+        int friendSize = friendShipService.getFriendSize(weixinUser.getOpenId());
+
+        return Result.success(friendSize);
+    }
+
+    @RequestMapping(value = "/add_friend", produces = "application/json")
+    public
+    @ResponseBody
+    Result<?> addFriend(String friendOpenId, String sessionId) {
+
+        WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
+        if (weixinUser == null) {
+            return Result.error(Message.INVALID, "获取不到用户信息");
+        }
+        //TODO 先判断是不是加自己为好友
+        // TODO 先检查有没有存在friendShip，有就不用加了
         WeixinUser friendUserInfo = weixinUserService.getWeixinUser(friendOpenId);
         if (friendUserInfo == null) {
             if (friendUserInfo == null) {
                 return Result.error(Message.INVALID, "该好友不存在");
             }
         }
+
         friendShipService.addFriend(weixinUser.getOpenId(), friendOpenId, friendUserInfo.getNickName(), friendUserInfo.getAvatarUrl());
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
@@ -206,9 +254,9 @@ public class WeixinController {
     @RequestMapping(value = "/remove_friend", produces = "application/json")
     public
     @ResponseBody
-    Result<?> removeFriend(String friendOpenId, HttpSession session) {
+    Result<?> removeFriend(String friendOpenId, String sessionId) {
 
-        WeixinUser weixinUser = (WeixinUser) session.getAttribute("loginUser");
+        WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
         }
@@ -228,19 +276,18 @@ public class WeixinController {
     }
 
     /**
-     *
      * @param friendOpenId
      * @param nickName
      * @param image
-     * @param session
+     * @param sessionId
      * @return
      */
     @RequestMapping(value = "/update_friend_message", produces = "application/json")
     public
     @ResponseBody
-    Result<?> updateFriendMessage(String friendOpenId, String nickName, String image, HttpSession session) {
+    Result<?> updateFriendMessage(String friendOpenId, String nickName, String image, String sessionId) {
 
-        WeixinUser weixinUser = (WeixinUser) session.getAttribute("loginUser");
+        WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
         }
@@ -258,15 +305,16 @@ public class WeixinController {
 
     /**
      * 请求未读聊天推送
-     * @param session
+     *
+     * @param sessionId
      * @return
      */
     @RequestMapping(value = "/ask_for_msg_push", produces = "application/json")
     public
     @ResponseBody
-    Result<?> askForMessagePsuh(HttpSession session) {
+    Result<?> askForMessagePsuh(String sessionId) {
 
-        WeixinUser weixinUser = (WeixinUser) session.getAttribute("loginUser");
+        WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
         }
@@ -278,16 +326,17 @@ public class WeixinController {
 
     /**
      * 删除聊天记录
+     *
      * @param friendOpenId
-     * @param session
+     * @param sessionId
      * @return
      */
     @RequestMapping(value = "/delete_chat_message", produces = "application/json")
     public
     @ResponseBody
-    Result<?> deleteChatMessage(String friendOpenId, HttpSession session) {
+    Result<?> deleteChatMessage(String friendOpenId, String sessionId) {
 
-        WeixinUser weixinUser = (WeixinUser) session.getAttribute("loginUser");
+        WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
         }

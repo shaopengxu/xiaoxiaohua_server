@@ -59,15 +59,6 @@ public class ChatMessageService {
 
     public boolean pushUnreadMessage(String openId) {
 
-        List<String> friendOpenIds = friendShipRedisDao.getFriendOpenIds(openId);
-        List<FriendShip> friendShips = new ArrayList<>();
-        for (String friendOpenId : friendOpenIds) {
-            List<ChatMessage> chatMessages = chatMessageRedisDao.getUnreadChatMessages(openId, friendOpenId);
-            if (chatMessages.size() > 0) {
-                FriendShip friendShip = friendShipMapper.getFriendShip(openId, friendOpenId);
-                friendShip.setUnreadChatMessages(chatMessages);
-            }
-        }
         Map<String, List<ChatMessage>> unreadChatMessages = chatMessageRedisDao.getUnreadChatMessages(openId);
         weixinUserService.pushUnreadMessage(openId, unreadChatMessages);
         return true;

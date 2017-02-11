@@ -45,10 +45,10 @@ public class FriendShipService {
         friendShipMapper.insert(friendShipA);
         WeixinUser user = weixinUserService.getWeixinUser(openId);
         FriendShip friendShipB = new FriendShip();
-        friendShipA.setOpenId(friendOpenId);
-        friendShipA.setFriendOpenId(openId);
-        friendShipA.setFriendNickName(user.getNickName());
-        friendShipA.setFriendImage(user.getAvatarUrl());
+        friendShipB.setOpenId(friendOpenId);
+        friendShipB.setFriendOpenId(openId);
+        friendShipB.setFriendNickName(user.getNickName());
+        friendShipB.setFriendImage(user.getAvatarUrl());
         friendShipMapper.insert(friendShipB);
         friendShipRedisDao.addFriendShip(openId, friendOpenId);
         return true;
@@ -86,5 +86,9 @@ public class FriendShipService {
             friendShip.setFriendImage(image);
         }
         friendShipMapper.updateById(friendShip);
+    }
+
+    public int getFriendSize(String openId) {
+        return friendShipRedisDao.getFriendOpenIds(openId).size();
     }
 }
