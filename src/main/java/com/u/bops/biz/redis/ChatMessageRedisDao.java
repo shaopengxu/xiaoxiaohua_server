@@ -96,21 +96,35 @@ public class ChatMessageRedisDao {
         return chatMessage;
     }
 
+    /**
+     * 获取某段聊天记录，beginMessageId 是为了防止读到删除信息设置的起点, 当size== -1 and  endMessageId == -1，返回beginMessageId到最后
+     * @param openId
+     * @param friendOpenId
+     * @param endMessageId
+     * @param beginMessageId
+     * @param size
+     * @return
+     */
     public List<ChatMessage> getChatMessages(String openId, String friendOpenId, String endMessageId, String beginMessageId, int size) {
         String key = USER_CHAT + "_" + openId + "_" + friendOpenId;
         long toIndex = 0;
         long fromIndex = StringUtils.equals("-1", beginMessageId) ? 0 :
                 redisDao.getIndexOfElementOfSortedList(key, beginMessageId);
-        if (StringUtils.equals("-1", endMessageId)) {
+        if (StringUtils.equals(endMessageId, "-1") && size == -1) {
             toIndex = redisDao.lsize(key);
-            fromIndex = toIndex - size < fromIndex ? fromIndex : toIndex - size;
         } else {
-            toIndex = redisDao.getIndexOfElementOfSortedList(key, endMessageId);
-            if (toIndex <= 0) {
-                return new ArrayList<>();
+            if (StringUtils.equals("-1", endMessageId)) {
+                toIndex = redisDao.lsize(key);
+                fromIndex = toIndex - size < fromIndex ? fromIndex : toIndex - size;
+            } else {
+                toIndex = redisDao.getIndexOfElementOfSortedList(key, endMessageId);
+                if (toIndex <= 0) {
+                    return new ArrayList<>();
+                }
+                fromIndex = toIndex - size < fromIndex ? fromIndex : toIndex - size;
             }
-            fromIndex = toIndex - size < fromIndex ? fromIndex : toIndex - size;
         }
+
         List<String> messageIds = redisDao.lrange(key, fromIndex, toIndex);
         List<ChatMessage> chatMessages = new ArrayList<>();
         for (String messageId : messageIds) {

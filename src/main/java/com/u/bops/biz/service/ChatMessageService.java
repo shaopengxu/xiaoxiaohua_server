@@ -5,6 +5,7 @@ import com.u.bops.biz.domain.ChatMessage;
 import com.u.bops.biz.domain.FriendShip;
 import com.u.bops.biz.redis.ChatMessageRedisDao;
 import com.u.bops.biz.redis.FriendShipRedisDao;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -57,15 +58,17 @@ public class ChatMessageService {
         return chatMessageRedisDao.getChatMessages(openId, friendOpenId, endMessageId, beginMessageId, size);
     }
 
-    public boolean pushUnreadMessage(String openId) {
+    public void askForMsgPush(String openId, String friendOpenId, String lastMessageId) {
+        FriendShip friendShip = friendShipMapper.getFriendShip(openId, friendOpenId);
+        if (friendShip == null || friendShip.isDeleted()) {
+            return ;
+        }
+        String beginMessageId = String.valueOf(friendShip.getLasteleteMessageId());
+        beginMessageId = StringUtils.equals(beginMessageId, "-1") ? lastMessageId :
+                (Long.parseLong(beginMessageId) > Long.parseLong(lastMessageId) ? beginMessageId : lastMessageId);
 
-        Map<String, List<ChatMessage>> unreadChatMessages = chatMessageRedisDao.getUnreadChatMessages(openId);
-        weixinUserService.pushUnreadMessage(openId, unreadChatMessages);
-        return true;
-    }
-
-    public void askForMsgPush(String openId) {
-        pushUnreadMessage(openId);
+        List<ChatMessage> chatMessages = chatMessageRedisDao.getChatMessages(openId, friendOpenId, "-1", beginMessageId, -1);
+        weixinUserService.pushUnreadMessage(openId, chatMessages);
     }
 
     public boolean deleteChatMessages(String openId, String friendOpenId) {

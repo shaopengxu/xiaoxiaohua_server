@@ -14,6 +14,7 @@ import com.u.bops.websockets.Message;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ibatis.annotations.Param;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,9 @@ public class WeixinController {
 
     private static final Logger logger = LoggerFactory.getLogger(WeixinController.class);
 
+    /**
+     * TODO session 过期
+     */
     private Map<String, Map<String, Object>> sessionMap = new ConcurrentHashMap<>();
 
     @Autowired
@@ -312,13 +316,13 @@ public class WeixinController {
     @RequestMapping(value = "/ask_for_msg_push", produces = "application/json")
     public
     @ResponseBody
-    Result<?> askForMessagePsuh(String sessionId) {
+    Result<?> askForMessagePsuh(@Param("lastMessageId") String lastMessageId, @Param("friendOpenId")String friendOpenId, @Param("sessionId") String sessionId) {
 
         WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
         }
-        chatMessageService.askForMsgPush(weixinUser.getOpenId());
+        chatMessageService.askForMsgPush(weixinUser.getOpenId(), friendOpenId, lastMessageId);
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
         return Result.success(result);

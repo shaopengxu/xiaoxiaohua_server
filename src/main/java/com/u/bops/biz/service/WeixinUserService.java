@@ -43,6 +43,7 @@ public class WeixinUserService {
 
     /**
      * 发送聊天
+     *
      * @param chatMessage
      * @return
      */
@@ -66,11 +67,12 @@ public class WeixinUserService {
 
     /**
      * 每隔一段时间清理用户
+     *
      * @return
      */
     @Scheduled(initialDelay = 1000000, fixedDelay = 1000000)
     public void removeUsers() {
-        for (Iterator<String> iterator = userOpenIdChannelMap.keySet().iterator();iterator.hasNext();) {
+        for (Iterator<String> iterator = userOpenIdChannelMap.keySet().iterator(); iterator.hasNext(); ) {
             String openId = iterator.next();
             if (!userOpenIdChannelMap.get(openId).isActive()) {
                 iterator.remove();
@@ -100,11 +102,26 @@ public class WeixinUserService {
         return weixinUserMapper.insert(weixinUser) > 0;
     }
 
+    /**
+     * 可能不需要指定friendOpenID,方法待定
+     * @param openId
+     * @param unreadMessages
+     */
     public void pushUnreadMessage(String openId, Map<String, List<ChatMessage>> unreadMessages) {
 
         Channel channel = userOpenIdChannelMap.get(openId);
         if (channel != null && channel.isActive()) {
             Result<Map<String, List<ChatMessage>>> message = Result.success(unreadMessages, Result.TYPE_PUSH_UNREAD_MESSAGE);
+            TextWebSocketFrame frame = new TextWebSocketFrame(message.toString());
+            channel.writeAndFlush(frame);
+        }
+    }
+
+    public void pushUnreadMessage(String openId, List<ChatMessage> chatMessages) {
+
+        Channel channel = userOpenIdChannelMap.get(openId);
+        if (channel != null && channel.isActive()) {
+            Result<List<ChatMessage>> message = Result.success(chatMessages, Result.TYPE_PUSH_UNREAD_MESSAGE);
             TextWebSocketFrame frame = new TextWebSocketFrame(message.toString());
             channel.writeAndFlush(frame);
         }

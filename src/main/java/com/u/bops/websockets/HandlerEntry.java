@@ -109,7 +109,6 @@ public class HandlerEntry {
                             if (loginSuccess) {
                                 channel.attr(OPENID_KEY).set(openId);
                                 weixinUserService.userOpenIdChannelMap.put(openId, channel);
-                                chatMessageService.pushUnreadMessage(openId);
                             }
                         }
                     } else if (StringUtils.equals(messageType, Result.TYPE_PUSH_MESSAGE)) {
