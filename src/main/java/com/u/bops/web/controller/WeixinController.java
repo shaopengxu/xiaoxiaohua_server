@@ -242,6 +242,9 @@ public class WeixinController {
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
         }
+        if (StringUtils.equals(friendOpenId, weixinUser.getOpenId())) {
+            return Result.error(Message.INVALID, "不能添加自己为好友");
+        }
         //TODO 先判断是不是加自己为好友
         // TODO 先检查有没有存在friendShip，有就不用加了
         WeixinUser friendUserInfo = weixinUserService.getWeixinUser(friendOpenId);
