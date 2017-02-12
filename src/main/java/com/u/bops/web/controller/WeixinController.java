@@ -122,12 +122,14 @@ public class WeixinController {
     Result<?> checkUserInfoOfTest(@RequestParam(required = true, value = "encryptedData") String encryptedData,
                                   @RequestParam(required = true, value = "iv") String iv,
                                   @RequestParam(required = true, value = "code") String code,
-                                  @RequestParam(required = true, value = "nickName") String nickName) {
+                                  @RequestParam(required = true, value = "nickName") String nickName,
+                                  @RequestParam("avatarUrl") String avatarUrl) {
 
 
         WeixinUserInfo weixinUserInfo = new WeixinUserInfo();
         weixinUserInfo.setNickName(nickName);
         weixinUserInfo.setOpenId(nickName);
+        weixinUserInfo.setAvatarUrl(avatarUrl);
 
         Map<String, Object> result = new HashMap<>();
         if (weixinUserInfo != null) {
