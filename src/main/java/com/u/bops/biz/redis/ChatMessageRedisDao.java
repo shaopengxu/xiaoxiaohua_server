@@ -42,7 +42,7 @@ public class ChatMessageRedisDao {
         //hset message
         String key = CHAT + "_" + chatMessage.getMessageId();
         redisDao.hset(key, CONTENT, chatMessage.getContent());
-        redisDao.hset(key, DATE, String.valueOf(chatMessage.getDate().getTime()));
+        redisDao.hset(key, DATE, String.valueOf(chatMessage.getDate()));
         redisDao.hset(key, FROM_OPENID, chatMessage.getFromOpenId());
         redisDao.hset(key, TO_OPENID, chatMessage.getToOpenId());
         redisDao.hset(key, TYPE, chatMessage.getType());
@@ -99,7 +99,7 @@ public class ChatMessageRedisDao {
         Map<String, String> map = redisDao.hgetAll(key);
         chatMessage.setMessageId(Long.parseLong(messageId));
         chatMessage.setContent(map.get(CONTENT));
-        chatMessage.setDate(new Date(Long.parseLong(map.get(DATE))));
+        chatMessage.setDate(Long.parseLong(map.get(DATE)));
         chatMessage.setFromOpenId(map.get(FROM_OPENID));
         chatMessage.setToOpenId(map.get(TO_OPENID));
         chatMessage.setType(map.get(TYPE));

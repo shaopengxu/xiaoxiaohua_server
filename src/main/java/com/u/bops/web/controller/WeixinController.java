@@ -62,6 +62,9 @@ public class WeixinController {
     private String getSessionKeyUrl = "https://api.weixin.qq.com/sns/jscode2session?appid=APPID&secret=SECRET&js_code={code}&grant_type=authorization_code";
 
     private Object getSessionAttribute(String sessionId, String attribute) {
+        if (sessionId == null) {
+            return null;
+        }
         Map<String, Object> session = sessionMap.get(sessionId);
         if (session == null) {
             return null;

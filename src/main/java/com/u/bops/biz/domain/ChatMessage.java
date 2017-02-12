@@ -5,7 +5,7 @@ import java.util.Date;
 public class ChatMessage {
     //messageId（保证递增 用redis的自增序列）, date, from, to, content, type
     private long messageId;
-    private Date date;
+    private long date;
     private String fromOpenId;
     private String toOpenId;
     private String content;
@@ -37,11 +37,11 @@ public class ChatMessage {
         this.messageId = messageId;
     }
 
-    public Date getDate() {
+    public long getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(long date) {
         this.date = date;
     }
 

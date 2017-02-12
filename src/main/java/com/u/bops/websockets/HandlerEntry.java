@@ -121,7 +121,7 @@ public class HandlerEntry {
 
                         ChatMessage chatMessage = new ChatMessage();
                         chatMessage = getChatMessageFromJson(jsonObject.get("data").getAsJsonObject());
-                        chatMessage.setDate(new Date());
+                        chatMessage.setDate(System.currentTimeMillis());
                         chatMessageService.publishMessage(chatMessage);
                     }
                     if (jsonObject.has(Result.SEQ)) {

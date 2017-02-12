@@ -89,7 +89,7 @@ public class FriendShipService {
             friendShip.setUnreadMessageSize(unreadMessageSizes.get(friendOpenId) == null ? 0 : unreadMessageSizes.get(friendOpenId));
             ChatMessage chatMessage = chatMessageRedisDao.getLastMessage(openId, friendOpenId);
             if (chatMessage != null) {
-                friendShip.setLastChatTime(chatMessage.getDate().getTime());
+                friendShip.setLastChatTime(chatMessage.getDate());
                 friendShip.setLastMessage(chatMessage.getContent());
             }else{
                 friendShip.setLastChatTime(0);
