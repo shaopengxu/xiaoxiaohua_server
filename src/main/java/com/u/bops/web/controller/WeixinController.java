@@ -216,7 +216,7 @@ public class WeixinController {
             return Result.error(Message.INVALID, "获取不到用户信息");
         }
         List<FriendShip> friendShips = friendShipService.getFriends(weixinUser.getOpenId());
-        //TODO unreadMessageSize、 最近聊天时间、最后一句对话
+
         return Result.success(friendShips);
     }
 
@@ -242,11 +242,11 @@ public class WeixinController {
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
         }
+        // 先判断是不是加自己为好友
         if (StringUtils.equals(friendOpenId, weixinUser.getOpenId())) {
             return Result.error(Message.INVALID, "不能添加自己为好友");
         }
-        //TODO 先判断是不是加自己为好友
-        // TODO 先检查有没有存在friendShip，有就不用加了
+
         WeixinUser friendUserInfo = weixinUserService.getWeixinUser(friendOpenId);
         if (friendUserInfo == null) {
             if (friendUserInfo == null) {

@@ -45,10 +45,6 @@ public class ChatMessageService {
         boolean updateSuccess = chatMessageRedisDao.updateUserUnreadMessage(openId, fromOpenId, -1);
     }
 
-    public int getUnreadMessageSize(String openId) {
-        return chatMessageRedisDao.getUnreadMessageSize(openId);
-    }
-
     public List<ChatMessage> getFriendChatMessages(String openId, String friendOpenId, String endMessageId, int size) {
         FriendShip friendShip = friendShipMapper.getFriendShip(openId, friendOpenId);
         if (friendShip == null || friendShip.isDeleted()) {

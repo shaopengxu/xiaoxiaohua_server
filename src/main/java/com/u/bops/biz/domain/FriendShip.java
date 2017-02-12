@@ -14,6 +14,33 @@ public class FriendShip {
     private String friendNickName;
     private String friendImage;
     private List<ChatMessage> unreadChatMessages;
+    private int unreadMessageSize;
+    private String lastMessage;
+    private long lastChatTime;
+
+    public int getUnreadMessageSize() {
+        return unreadMessageSize;
+    }
+
+    public void setUnreadMessageSize(int unreadMessageSize) {
+        this.unreadMessageSize = unreadMessageSize;
+    }
+
+    public String getLastMessage() {
+        return lastMessage;
+    }
+
+    public void setLastMessage(String lastMessage) {
+        this.lastMessage = lastMessage;
+    }
+
+    public long getLastChatTime() {
+        return lastChatTime;
+    }
+
+    public void setLastChatTime(long lastChatTime) {
+        this.lastChatTime = lastChatTime;
+    }
 
     public List<ChatMessage> getUnreadChatMessages() {
         return unreadChatMessages;

@@ -1,6 +1,7 @@
 package com.u.bops.biz.redis;
 
 import com.u.bops.biz.domain.ChatMessage;
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -54,8 +55,17 @@ public class ChatMessageRedisDao {
         return true;
     }
 
-    public int getUnreadMessageSize(String openId) {
-        return Integer.parseInt(redisDao.hget(USER_UNREAD_MESSAGE_SIZE, openId));
+    public int getUnreadMessageSize(String openId, String friendOpenId) {
+        return Integer.parseInt(redisDao.hget(USER_UNREAD_MESSAGE_SIZE + "_" + openId, friendOpenId));
+    }
+
+    public Map<String, Integer> getUnreadMessageSizes(String openId) {
+        Map<String, Integer> result = new HashedMap();
+        Map<String, String> sizes = redisDao.hgetAll(USER_UNREAD_MESSAGE_SIZE + "_" + openId);
+        for (String key : sizes.keySet()) {
+            result.put(key, Integer.parseInt(sizes.get(key)));
+        }
+        return result;
     }
 
     public List<ChatMessage> getUnreadChatMessages(String openId, String friendOpenId) {
@@ -161,5 +171,10 @@ public class ChatMessageRedisDao {
             result.put(friendOpenId, chatMessages);
         }
         return result;
+    }
+
+    public ChatMessage getLastMessage(String openId, String friendOpenId) {
+        String lastMessageId = getLastMessageId(openId, friendOpenId);
+        return getChatMessage(lastMessageId);
     }
 }
