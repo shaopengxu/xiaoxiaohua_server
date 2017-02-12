@@ -360,4 +360,32 @@ public class WeixinController {
         result.put("success", true);
         return Result.success(result);
     }
+
+    /**
+     * 聊天记录已读
+     *
+     * @param friendOpenId
+     * @param sessionId
+     * @return
+     */
+    @RequestMapping(value = "/message_read", produces = "application/json")
+    public
+    @ResponseBody
+    Result<?> messageRead(String friendOpenId, String sessionId) {
+
+        WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
+        if (weixinUser == null) {
+            return Result.error(Message.INVALID, "获取不到用户信息");
+        }
+        WeixinUser friendUserInfo = weixinUserService.getWeixinUser(friendOpenId);
+        if (friendUserInfo == null) {
+            if (friendUserInfo == null) {
+                return Result.error(Message.INVALID, "该好友不存在");
+            }
+        }
+        chatMessageService.readMessage(weixinUser.getOpenId(), friendOpenId);
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        return Result.success(result);
+    }
 }
