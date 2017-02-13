@@ -1,5 +1,7 @@
 package com.u.bops.web.controller;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.u.bops.biz.vo.WeixinUserInfo;
 import com.google.gson.Gson;
 import com.u.bops.biz.domain.FriendShip;
@@ -11,6 +13,7 @@ import com.u.bops.biz.vo.Result;
 import com.u.bops.util.HttpUtils;
 import com.u.bops.util.Pair;
 import com.u.bops.websockets.Message;
+import io.netty.channel.Channel;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
@@ -32,6 +35,7 @@ import java.net.URISyntaxException;
 import java.security.InvalidAlgorithmParameterException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.schemas.office.x2006.encryption.STCipherAlgorithm.AES;
 
@@ -48,7 +52,8 @@ public class WeixinController {
     /**
      * TODO session 过期
      */
-    private Map<String, Map<String, Object>> sessionMap = new ConcurrentHashMap<>();
+    private Cache<String, Map<String, Object>> sessionMap = CacheBuilder
+            .newBuilder().maximumSize(100000).expireAfterAccess(30, TimeUnit.MINUTES).build();
 
     @Autowired
     private WeixinUserService weixinUserService;
@@ -65,7 +70,7 @@ public class WeixinController {
         if (sessionId == null) {
             return null;
         }
-        Map<String, Object> session = sessionMap.get(sessionId);
+        Map<String, Object> session = sessionMap.getIfPresent(sessionId);
         if (session == null) {
             return null;
         }
@@ -73,7 +78,7 @@ public class WeixinController {
     }
 
     private void putSessionAttribute(String sessionId, String attribute, Object value) {
-        Map<String, Object> session = sessionMap.get(sessionId);
+        Map<String, Object> session = sessionMap.getIfPresent(sessionId);
         if (session == null) {
             session = new HashedMap();
             sessionMap.put(sessionId, session);
@@ -82,7 +87,7 @@ public class WeixinController {
     }
 
     private void removeSessionAttribute(String sessionId, String attribute) {
-        Map<String, Object> session = sessionMap.get(sessionId);
+        Map<String, Object> session = sessionMap.getIfPresent(sessionId);
         if (session != null) {
             session.remove(attribute);
         }
@@ -95,7 +100,7 @@ public class WeixinController {
                             @RequestParam(required = true, value = "iv") String iv,
                             @RequestParam(required = true, value = "code") String code) {
 
-        //TODO 通过code获取sessionKey
+        // 通过code获取sessionKey
         String url = getSessionKeyUrl.replace("{code}", code);
         try {
             Pair<Integer, String> result = HttpUtils.get(url, new HashMap<String, String>(), "UTF-8", new HashMap<String, String>());

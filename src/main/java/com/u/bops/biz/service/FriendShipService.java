@@ -84,6 +84,7 @@ public class FriendShipService {
         List<FriendShip> friendShips = new ArrayList<>();
         Map<String, Integer> unreadMessageSizes = chatMessageRedisDao.getUnreadMessageSizes(openId);
         for (String friendOpenId : friendOpenIds) {
+            //TODO 批量获取
             FriendShip friendShip = friendShipMapper.getFriendShip(openId, friendOpenId);
 
             friendShip.setUnreadMessageSize(unreadMessageSizes.get(friendOpenId) == null ? 0 : unreadMessageSizes.get(friendOpenId));
@@ -91,7 +92,7 @@ public class FriendShipService {
             if (chatMessage != null) {
                 friendShip.setLastChatTime(chatMessage.getDate());
                 friendShip.setLastMessage(chatMessage.getContent());
-            }else{
+            } else {
                 friendShip.setLastChatTime(0);
                 friendShip.setLastMessage("");
             }

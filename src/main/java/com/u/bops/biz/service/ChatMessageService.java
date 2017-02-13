@@ -5,13 +5,11 @@ import com.u.bops.biz.domain.ChatMessage;
 import com.u.bops.biz.domain.FriendShip;
 import com.u.bops.biz.redis.ChatMessageRedisDao;
 import com.u.bops.biz.redis.FriendShipRedisDao;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Shaopeng.Xu on 2017-02-06.
@@ -32,19 +30,33 @@ public class ChatMessageService {
     @Autowired
     private WeixinUserService weixinUserService;
 
+    /**
+     * 用户聊天
+     * @param message
+     */
     public void publishMessage(ChatMessage message) {
         chatMessageRedisDao.addChatMessage(message);
-        boolean updateSuccess = chatMessageRedisDao.updateUserUnreadMessage(message.getToOpenId(), message.getFromOpenId(), message.getMessageId());
-        //当自己发送message，自己的unreadMessageId就会清空
-        updateSuccess = chatMessageRedisDao.updateUserUnreadMessage(message.getFromOpenId(), message.getToOpenId(), -1);
+        chatMessageRedisDao.incrUnreadMessageSize(message.getToOpenId(), message.getFromOpenId(), message.getMessageId());
         weixinUserService.sendMessage(message);
-
     }
 
+    /**
+     * 消息已读
+     * @param openId
+     * @param fromOpenId
+     */
     public void readMessage(String openId, String fromOpenId) {
-        boolean updateSuccess = chatMessageRedisDao.updateUserUnreadMessage(openId, fromOpenId, -1);
+        chatMessageRedisDao.readMessage(openId, fromOpenId);
     }
 
+    /**
+     * 获取历史聊天记录
+     * @param openId
+     * @param friendOpenId
+     * @param endMessageId
+     * @param size
+     * @return
+     */
     public List<ChatMessage> getFriendChatMessages(String openId, String friendOpenId, String endMessageId, int size) {
         FriendShip friendShip = friendShipMapper.getFriendShip(openId, friendOpenId);
         if (friendShip == null || friendShip.isDeleted()) {
@@ -54,19 +66,30 @@ public class ChatMessageService {
         return chatMessageRedisDao.getChatMessages(openId, friendOpenId, endMessageId, beginMessageId, size);
     }
 
+    /**
+     * 请求最新聊天记录
+     * @param openId
+     * @param friendOpenId
+     * @param lastMessageId
+     */
     public void askForMsgPush(String openId, String friendOpenId, String lastMessageId) {
         FriendShip friendShip = friendShipMapper.getFriendShip(openId, friendOpenId);
         if (friendShip == null || friendShip.isDeleted()) {
             return ;
         }
         String beginMessageId = String.valueOf(friendShip.getLasteleteMessageId());
-        beginMessageId = StringUtils.equals(beginMessageId, "-1") ? lastMessageId :
-                (Long.parseLong(beginMessageId) > Long.parseLong(lastMessageId) ? beginMessageId : lastMessageId);
+        beginMessageId = Long.parseLong(beginMessageId) > Long.parseLong(lastMessageId) ? beginMessageId : lastMessageId;
 
         List<ChatMessage> chatMessages = chatMessageRedisDao.getChatMessages(openId, friendOpenId, "-1", beginMessageId, -1);
         weixinUserService.pushUnreadMessage(openId, chatMessages);
     }
 
+    /**
+     * 清空聊天记录
+     * @param openId
+     * @param friendOpenId
+     * @return
+     */
     public boolean deleteChatMessages(String openId, String friendOpenId) {
 
         FriendShip friendShip = friendShipMapper.getFriendShip(openId, friendOpenId);

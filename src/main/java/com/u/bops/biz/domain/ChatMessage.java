@@ -10,8 +10,17 @@ public class ChatMessage {
     private String toOpenId;
     private String content;
     private String type;
+    private String showType;
     private String fromUserDelete;
     private String toUserDelete;
+
+    public String getShowType() {
+        return showType;
+    }
+
+    public void setShowType(String showType) {
+        this.showType = showType;
+    }
 
     public String getFromUserDelete() {
         return fromUserDelete;
