@@ -152,6 +152,9 @@ public class ChatMessageRedisDao {
 
     public ChatMessage getLastMessage(String openId, String friendOpenId) {
         String lastMessageId = getLastMessageId(openId, friendOpenId);
+        if (lastMessageId == null) {
+            return null;
+        }
         return getChatMessage(lastMessageId);
     }
 }
