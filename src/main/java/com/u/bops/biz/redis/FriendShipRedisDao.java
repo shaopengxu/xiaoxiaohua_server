@@ -4,6 +4,7 @@ import com.u.bops.biz.domain.FriendShip;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -45,5 +46,14 @@ public class FriendShipRedisDao {
     public boolean removeFriendShip(String openId, String friendOpenId) {
         String key = FRIENDSHIP + "_" + openId;
         return redisDao.lrem(key, 1, friendOpenId);
+    }
+
+    /**
+     * 返回随机头像的本地存储地址
+     * @return
+     */
+    public List<String> getRandomImages(){
+        //TODO
+        return new ArrayList<>();
     }
 }

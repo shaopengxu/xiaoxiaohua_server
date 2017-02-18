@@ -129,4 +129,8 @@ public class FriendShipService {
     public int getFriendSize(String openId) {
         return friendShipRedisDao.getFriendOpenIds(openId).size();
     }
+
+    public List<String> getRandomImages(){
+        return friendShipRedisDao.getRandomImages();
+    }
 }

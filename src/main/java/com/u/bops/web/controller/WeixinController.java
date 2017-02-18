@@ -17,7 +17,6 @@ import io.netty.channel.Channel;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
-import org.apache.ibatis.annotations.Param;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -176,7 +175,7 @@ public class WeixinController {
     @RequestMapping(value = "/register", produces = "application/json")
     public
     @ResponseBody
-    Result<?> register(String password, String sessionId) {
+    Result<?> register(@RequestParam("password") String password, @RequestParam("sessionId") String sessionId) {
 
         WeixinUserInfo weixinUserInfo = (WeixinUserInfo) getSessionAttribute(sessionId, "userInfo");
         if (weixinUserInfo == null) {
@@ -195,7 +194,7 @@ public class WeixinController {
     @RequestMapping(value = "/login", produces = "application/json")
     public
     @ResponseBody
-    Result<?> login(String password, String sessionId) {
+    Result<?> login(@RequestParam("password") String password, @RequestParam("sessionId") String sessionId) {
         WeixinUserInfo weixinUserInfo = (WeixinUserInfo) getSessionAttribute(sessionId, "userInfo");
         if (weixinUserInfo == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
@@ -218,7 +217,7 @@ public class WeixinController {
     @RequestMapping(value = "/get_friends", produces = "application/json")
     public
     @ResponseBody
-    Result<?> getFriends(String sessionId) {
+    Result<?> getFriends(@RequestParam("sessionId") String sessionId) {
         WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
@@ -231,7 +230,7 @@ public class WeixinController {
     @RequestMapping(value = "/get_friend_size", produces = "application/json")
     public
     @ResponseBody
-    Result<?> getFriendSize(String sessionId) {
+    Result<?> getFriendSize(@RequestParam("sessionId") String sessionId) {
         WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
@@ -244,7 +243,7 @@ public class WeixinController {
     @RequestMapping(value = "/add_friend", produces = "application/json")
     public
     @ResponseBody
-    Result<?> addFriend(String friendOpenId, String sessionId) {
+    Result<?> addFriend(@RequestParam("friendOpenId") String friendOpenId, @RequestParam("sessionId") String sessionId) {
 
         WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
@@ -271,7 +270,7 @@ public class WeixinController {
     @RequestMapping(value = "/remove_friend", produces = "application/json")
     public
     @ResponseBody
-    Result<?> removeFriend(String friendOpenId, String sessionId) {
+    Result<?> removeFriend(@RequestParam("friendOpenId") String friendOpenId, @RequestParam("sessionId") String sessionId) {
 
         WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
@@ -295,14 +294,14 @@ public class WeixinController {
     /**
      * @param friendOpenId
      * @param nickName
-     * @param image
      * @param sessionId
      * @return
      */
-    @RequestMapping(value = "/update_friend_message", produces = "application/json")
+    @RequestMapping(value = "/update_friend_nick_name", produces = "application/json")
     public
     @ResponseBody
-    Result<?> updateFriendMessage(String friendOpenId, String nickName, String image, String sessionId) {
+    Result<?> updateFriendNickName(@RequestParam("friendOpenId") String friendOpenId, @RequestParam("nickName") String nickName,
+                                   @RequestParam("sessionId") String sessionId) {
 
         WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
@@ -314,11 +313,40 @@ public class WeixinController {
                 return Result.error(Message.INVALID, "该好友不存在");
             }
         }
-        friendShipService.updateFriendMessage(weixinUser.getOpenId(), friendOpenId, nickName, image);
+        friendShipService.updateFriendMessage(weixinUser.getOpenId(), friendOpenId, nickName, null);
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
         return Result.success(result);
     }
+
+    //change_random_image
+    /**
+     * @param friendOpenId
+     * @param sessionId
+     * @return
+     */
+    @RequestMapping(value = "/change_random_image", produces = "application/json")
+    public
+    @ResponseBody
+    Result<?> changeRandomImage(@RequestParam("friendOpenId") String friendOpenId, @RequestParam("sessionId") String sessionId) {
+
+        WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
+        if (weixinUser == null) {
+            return Result.error(Message.INVALID, "获取不到用户信息");
+        }
+        WeixinUser friendUserInfo = weixinUserService.getWeixinUser(friendOpenId);
+        if (friendUserInfo == null) {
+            if (friendUserInfo == null) {
+                return Result.error(Message.INVALID, "该好友不存在");
+            }
+        }
+        List<String> images = friendShipService.getRandomImages();
+        String image = images.size() > 0 ? images.get((int) (Math.random() * images.size())) : "";
+        friendShipService.updateFriendMessage(weixinUser.getOpenId(), friendOpenId, null, image);
+        return Result.success(image);
+    }
+
+
 
     /**
      * 请求未读聊天推送
@@ -329,7 +357,8 @@ public class WeixinController {
     @RequestMapping(value = "/ask_for_msg_push", produces = "application/json")
     public
     @ResponseBody
-    Result<?> askForMessagePsuh(@Param("lastMessageId") String lastMessageId, @Param("friendOpenId")String friendOpenId, @Param("sessionId") String sessionId) {
+    Result<?> askForMessagePsuh(@RequestParam("lastMessageId") String lastMessageId, @RequestParam("friendOpenId")String friendOpenId,
+                                @RequestParam("sessionId") String sessionId) {
 
         WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
@@ -351,7 +380,7 @@ public class WeixinController {
     @RequestMapping(value = "/delete_chat_message", produces = "application/json")
     public
     @ResponseBody
-    Result<?> deleteChatMessage(String friendOpenId, String sessionId) {
+    Result<?> deleteChatMessage(@RequestParam("friendOpenId") String friendOpenId, @RequestParam("sessionId") String sessionId) {
 
         WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
