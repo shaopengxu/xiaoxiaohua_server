@@ -206,13 +206,14 @@ public class WeixinController {
         if (weixinUserInfo == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
         }
-        removeSessionAttribute(sessionId, "userInfo");
+
         WeixinUser weixinUser = weixinUserService.getWeixinUser(weixinUserInfo.getOpenId());
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "用户不存在");
         }
         boolean success = false;
         if (StringUtils.equals(password, weixinUser.getPassword())) {
+            removeSessionAttribute(sessionId, "userInfo");
             putSessionAttribute(sessionId, "loginUser", weixinUser);
             success = true;
         }
