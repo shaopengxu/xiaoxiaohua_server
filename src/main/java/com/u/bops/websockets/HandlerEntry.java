@@ -36,7 +36,7 @@ public class HandlerEntry {
     @Autowired
     private ChatMessageService chatMessageService;
 
-    public BlockingQueue<Pair<Result, Channel>> channelMsgBlockingQueue = new LinkedBlockingQueue<>();
+    public BlockingQueue<Pair<String, Channel>> channelMsgBlockingQueue = new LinkedBlockingQueue<>();
 
     public static final String ATTRIBUTEKEY_OPENID = "ATTRIBUTEKEY_OPENID";
     public static final String FIELD_OPENID = "openId";
@@ -56,13 +56,11 @@ public class HandlerEntry {
     public void pushMsg() {
         while (true) {
             try {
-                Pair<Result, Channel> pair = channelMsgBlockingQueue.take();
-                Result result = pair.getL();
+                Pair<String, Channel> pair = channelMsgBlockingQueue.take();
+                String result = pair.getL();
                 Channel c = pair.getR();
+                c.writeAndFlush(new TextWebSocketFrame(result));
 
-                if (result.getCode() != Message.NO_REPLY) {
-                    c.writeAndFlush(new TextWebSocketFrame(result.toString()));
-                }
             } catch (InterruptedException e) {
                 logger.error("e", e);
             }
@@ -85,7 +83,7 @@ public class HandlerEntry {
                     messageType = je != null ? je.getAsString() : null;
                     if (StringUtils.isBlank(messageType)) {
                         result.setCode(Message.API_NOT_EXIST);
-                        channelMsgBlockingQueue.put(new Pair(result, channel));
+                        channelMsgBlockingQueue.put(new Pair(result.toString(), channel));
                         return;
                     }
                     result.setType(messageType);
@@ -115,7 +113,7 @@ public class HandlerEntry {
                         String openId = channel.attr(OPENID_KEY).get();
                         if (openId == null) {
                             result.setCode(Message.NOT_LOGIN);
-                            channelMsgBlockingQueue.put(new Pair(result, channel));
+                            channelMsgBlockingQueue.put(new Pair(result.toString(), channel));
                             return;
                         }
 
@@ -135,7 +133,7 @@ public class HandlerEntry {
                     logger.error("error", e);
                     result.setCode(Message.EXCEPTION_ERROR);
                     try {
-                        channelMsgBlockingQueue.put(new Pair(result, channel));
+                        channelMsgBlockingQueue.put(new Pair(result.toString(), channel));
                     } catch (InterruptedException e1) {
                         logger.error("error", e);
                     }
