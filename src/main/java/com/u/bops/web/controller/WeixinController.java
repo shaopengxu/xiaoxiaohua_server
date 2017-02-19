@@ -202,12 +202,20 @@ public class WeixinController {
     Result<?> login(@RequestParam("password") String password, @RequestParam("sessionId") String sessionId) {
         logger.info(String.format("login, password: %s, sessionId:%s",
                 password, sessionId));
+        WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
+        if (weixinUser != null) {
+            if (StringUtils.equals(password, weixinUser.getPassword())) {
+                Map<String, Object> result = new HashMap<>();
+                result.put("success", true);
+                return Result.success(result);
+            }
+        }
         WeixinUserInfo weixinUserInfo = (WeixinUserInfo) getSessionAttribute(sessionId, "userInfo");
         if (weixinUserInfo == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
         }
 
-        WeixinUser weixinUser = weixinUserService.getWeixinUser(weixinUserInfo.getOpenId());
+        weixinUser = weixinUserService.getWeixinUser(weixinUserInfo.getOpenId());
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "用户不存在");
         }
