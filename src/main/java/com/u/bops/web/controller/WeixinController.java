@@ -99,6 +99,8 @@ public class WeixinController {
                             @RequestParam(required = true, value = "iv") String iv,
                             @RequestParam(required = true, value = "code") String code) {
 
+        logger.info("check_user_info");
+
         // 通过code获取sessionKey
         String url = getSessionKeyUrl.replace("{code}", code);
         try {
@@ -132,7 +134,8 @@ public class WeixinController {
                                   @RequestParam(required = true, value = "nickName") String nickName,
                                   @RequestParam("avatarUrl") String avatarUrl) {
 
-
+        logger.info(String.format("check_user_info, encryptedData: %s, iv:%s, code:%s, nickName:%s, avatarUrl: %s",
+                encryptedData, iv, code, nickName, avatarUrl));
         WeixinUserInfo weixinUserInfo = new WeixinUserInfo();
         weixinUserInfo.setNickName(nickName);
         weixinUserInfo.setOpenId(nickName);
@@ -177,6 +180,8 @@ public class WeixinController {
     @ResponseBody
     Result<?> register(@RequestParam("password") String password, @RequestParam("sessionId") String sessionId) {
 
+        logger.info(String.format("register, password: %s, sessionId:%s",
+                password, sessionId));
         WeixinUserInfo weixinUserInfo = (WeixinUserInfo) getSessionAttribute(sessionId, "userInfo");
         if (weixinUserInfo == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
@@ -195,6 +200,8 @@ public class WeixinController {
     public
     @ResponseBody
     Result<?> login(@RequestParam("password") String password, @RequestParam("sessionId") String sessionId) {
+        logger.info(String.format("login, password: %s, sessionId:%s",
+                password, sessionId));
         WeixinUserInfo weixinUserInfo = (WeixinUserInfo) getSessionAttribute(sessionId, "userInfo");
         if (weixinUserInfo == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
@@ -218,6 +225,8 @@ public class WeixinController {
     public
     @ResponseBody
     Result<?> getFriends(@RequestParam("sessionId") String sessionId) {
+        logger.info(String.format("get_friends, sessionId:%s",
+                 sessionId));
         WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
@@ -231,6 +240,9 @@ public class WeixinController {
     public
     @ResponseBody
     Result<?> getFriendSize(@RequestParam("sessionId") String sessionId) {
+        logger.info(String.format("get_friend_size, sessionId:%s",
+                sessionId));
+
         WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
@@ -244,6 +256,8 @@ public class WeixinController {
     public
     @ResponseBody
     Result<?> addFriend(@RequestParam("friendOpenId") String friendOpenId, @RequestParam("sessionId") String sessionId) {
+        logger.info(String.format("add_friend, friendOpenId: %s, sessionId:%s",
+                friendOpenId, sessionId));
 
         WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
@@ -272,6 +286,8 @@ public class WeixinController {
     @ResponseBody
     Result<?> removeFriend(@RequestParam("friendOpenId") String friendOpenId, @RequestParam("sessionId") String sessionId) {
 
+        logger.info(String.format("remove_friend, friendOpenId: %s, sessionId:%s",
+                friendOpenId, sessionId));
         WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
@@ -303,6 +319,8 @@ public class WeixinController {
     Result<?> updateFriendNickName(@RequestParam("friendOpenId") String friendOpenId, @RequestParam("nickName") String nickName,
                                    @RequestParam("sessionId") String sessionId) {
 
+        logger.info(String.format("update_friend_nick_name, friendOpenId: %s, nickName: %s, sessionId:%s",
+                friendOpenId, nickName, sessionId));
         WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
@@ -330,6 +348,8 @@ public class WeixinController {
     @ResponseBody
     Result<?> changeRandomImage(@RequestParam("friendOpenId") String friendOpenId, @RequestParam("sessionId") String sessionId) {
 
+        logger.info(String.format("change_random_image, friendOpenId: %s,  sessionId:%s",
+                friendOpenId, sessionId));
         WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
@@ -360,6 +380,8 @@ public class WeixinController {
     Result<?> askForMessagePsuh(@RequestParam("lastMessageId") String lastMessageId, @RequestParam("friendOpenId")String friendOpenId,
                                 @RequestParam("sessionId") String sessionId) {
 
+        logger.info(String.format("ask_for_msg_push, friendOpenId: %s, lastMessageId: %s,  sessionId:%s",
+                friendOpenId, lastMessageId, sessionId));
         WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
@@ -382,6 +404,8 @@ public class WeixinController {
     @ResponseBody
     Result<?> deleteChatMessage(@RequestParam("friendOpenId") String friendOpenId, @RequestParam("sessionId") String sessionId) {
 
+        logger.info(String.format("delete_chat_message, friendOpenId: %s,  sessionId:%s",
+                friendOpenId, sessionId));
         WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
@@ -410,6 +434,8 @@ public class WeixinController {
     @ResponseBody
     Result<?> messageRead(String friendOpenId, String sessionId) {
 
+        logger.info(String.format("message_read, friendOpenId: %s,  sessionId:%s",
+                friendOpenId, sessionId));
         WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");

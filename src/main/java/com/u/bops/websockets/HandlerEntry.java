@@ -71,7 +71,7 @@ public class HandlerEntry {
 
 
     public void execute(final Channel channel, final String request) {
-        // logger.info(request.substring(0,Math.min(request.length(), 30)));
+        logger.info(request.substring(0,Math.min(request.length(), 50)));
         executor.execute(new Runnable() {
             @Override
             public void run() {
