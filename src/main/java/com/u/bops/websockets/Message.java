@@ -22,6 +22,7 @@ public class Message {
 	public static int NO_REPLY = -1001;
 	public static int AUTH_ERROR = -1002;
 	public static int DEAD_ERROR = -9999;
+	public static int USER_NOT_EXISTS = -1003;
 
 	public static int OK_CODE = 1;
 

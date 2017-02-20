@@ -13,5 +13,6 @@ public interface WeixinUserMapper extends GeneralMapper<WeixinUser>  {
 
     public WeixinUser getWeixinUser(@Param("openId") String openId);
 
+    void deleteWeixinUser(@Param("openId") String openId);
 }
 

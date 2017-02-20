@@ -92,6 +92,7 @@ public class ChatMessageRedisDao {
     /**
      * 获取某段聊天记录，beginMessageId 是为了防止读到删除信息设置的起点, 当size== -1 and  endMessageId == -1，返回beginMessageId到最后
      * 返回的message不包括beginMessageId 也不包括endMessageId
+     *
      * @param openId
      * @param friendOpenId
      * @param endMessageId
@@ -156,5 +157,17 @@ public class ChatMessageRedisDao {
             return null;
         }
         return getChatMessage(lastMessageId);
+    }
+
+    public void deleteChatMessages(String openId, String friendOpenId) {
+        String key = USER_CHAT + "_" + openId + "_" + friendOpenId;
+        List<String> chatMessageIds = redisDao.lrange(key, 0, -1);
+        for (String chatMessageId : chatMessageIds) {
+            redisDao.del(CHAT + "_" + chatMessageId);
+        }
+        redisDao.del(USER_CHAT + "_" + openId + "_" + friendOpenId);
+        redisDao.del(USER_CHAT + "_" + friendOpenId + "_" + openId);
+        redisDao.hdel(USER_UNREAD_MESSAGE_SIZE + "_" + openId, friendOpenId);
+        redisDao.hdel(USER_UNREAD_MESSAGE_SIZE + "_" + friendOpenId, openId);
     }
 }

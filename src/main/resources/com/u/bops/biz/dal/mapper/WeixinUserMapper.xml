@@ -79,6 +79,10 @@
         WHERE open_id = #{openId}
     </update>
 
+    <delete id="deleteWeixinUser" >
+        delete from weixin_user where open_id = #{openId}
+    </delete>
+
     <insert id="insert" parameterType="WeixinUser">
         INSERT INTO `weixin_user`
         (`open_id`,`union_id`,`nick_name`,`password`,`country`,`province`,`city`,

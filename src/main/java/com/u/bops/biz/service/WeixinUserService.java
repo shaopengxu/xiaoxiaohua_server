@@ -126,4 +126,8 @@ public class WeixinUserService {
             channel.writeAndFlush(frame);
         }
     }
+
+    public void deleteWeixinUser(String openId) {
+        weixinUserMapper.deleteWeixinUser(openId);
+    }
 }

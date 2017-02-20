@@ -199,35 +199,75 @@ public class WeixinController {
     @RequestMapping(value = "/login", produces = "application/json")
     public
     @ResponseBody
-    Result<?> login(@RequestParam("password") String password, @RequestParam("sessionId") String sessionId) {
-        logger.info(String.format("login, password: %s, sessionId:%s",
-                password, sessionId));
-        WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
-        if (weixinUser != null) {
-            if (StringUtils.equals(password, weixinUser.getPassword())) {
-                Map<String, Object> result = new HashMap<>();
-                result.put("success", true);
-                return Result.success(result);
+    Result<?> login(@RequestParam("password") String password, @RequestParam(value = "sessionId", required = false) String sessionId,
+                    @RequestParam(required = false, value = "openId") String openId) {
+        logger.info(String.format("login, password: %s, sessionId:%s, openId:%s",
+                password, sessionId, openId));
+        if (StringUtils.isNotBlank(sessionId)) {
+            WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
+            if (weixinUser != null) {
+                if (StringUtils.equals(password, weixinUser.getPassword())) {
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("success", true);
+                    return Result.success(result);
+                }
             }
-        }
-        WeixinUserInfo weixinUserInfo = (WeixinUserInfo) getSessionAttribute(sessionId, "userInfo");
-        if (weixinUserInfo == null) {
-            return Result.error(Message.INVALID, "获取不到用户信息");
+            WeixinUserInfo weixinUserInfo = (WeixinUserInfo) getSessionAttribute(sessionId, "userInfo");
+            if (weixinUserInfo == null) {
+                return Result.error(Message.INVALID, "获取不到用户信息");
+            }
+
+            weixinUser = weixinUserService.getWeixinUser(weixinUserInfo.getOpenId());
+            if (weixinUser == null) {
+                return Result.error(Message.INVALID, "用户不存在");
+            }
+            boolean success = false;
+            if (StringUtils.equals(password, weixinUser.getPassword())) {
+                removeSessionAttribute(sessionId, "userInfo");
+                putSessionAttribute(sessionId, "loginUser", weixinUser);
+                success = true;
+            }
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", success);
+            result.put("sessionId", sessionId);
+            return Result.success(result);
+        } else if (StringUtils.isNotBlank(openId)) {
+            WeixinUser weixinUser = weixinUserService.getWeixinUser(openId);
+            if (weixinUser != null) {
+                if (StringUtils.equals(password, weixinUser.getPassword())) {
+                    sessionId = String.valueOf(System.nanoTime());
+                    putSessionAttribute(sessionId, "loginUser", weixinUser);
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("success", true);
+                    result.put("sessionId", sessionId);
+                    return Result.success(result);
+                } else {
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("success", false);
+                    return Result.error(Message.AUTH_ERROR, "密码错误");
+                }
+            } else {
+                Map<String, Object> result = new HashMap<>();
+                result.put("success", false);
+                return Result.error(Message.USER_NOT_EXISTS, "用户不存在");
+            }
+        } else {
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", false);
+            return Result.error(Message.MISSING_PARAM, "参数错误");
         }
 
-        weixinUser = weixinUserService.getWeixinUser(weixinUserInfo.getOpenId());
-        if (weixinUser == null) {
-            return Result.error(Message.INVALID, "用户不存在");
-        }
-        boolean success = false;
-        if (StringUtils.equals(password, weixinUser.getPassword())) {
-            removeSessionAttribute(sessionId, "userInfo");
-            putSessionAttribute(sessionId, "loginUser", weixinUser);
-            success = true;
-        }
-        Map<String, Object> result = new HashMap<>();
-        result.put("success", success);
-        return Result.success(result);
+    }
+
+    @RequestMapping(value = "/delete_weixin_user", produces = "application/json")
+    public
+    @ResponseBody
+    Result<?> deleteWeixinUser(@RequestParam("openId") String openId) {
+        //获取好友，删除与好友的聊天 然后删除好友
+        friendShipService.deleteFriendShips(openId);
+        //删除用户
+        weixinUserService.deleteWeixinUser(openId);
+        return Result.success("delete success");
     }
 
     @RequestMapping(value = "/get_friends", produces = "application/json")
@@ -235,7 +275,7 @@ public class WeixinController {
     @ResponseBody
     Result<?> getFriends(@RequestParam("sessionId") String sessionId) {
         logger.info(String.format("get_friends, sessionId:%s",
-                 sessionId));
+                sessionId));
         WeixinUser weixinUser = (WeixinUser) getSessionAttribute(sessionId, "loginUser");
         if (weixinUser == null) {
             return Result.error(Message.INVALID, "获取不到用户信息");
@@ -347,6 +387,7 @@ public class WeixinController {
     }
 
     //change_random_image
+
     /**
      * @param friendOpenId
      * @param sessionId
@@ -376,7 +417,6 @@ public class WeixinController {
     }
 
 
-
     /**
      * 请求未读聊天推送
      *
@@ -386,7 +426,7 @@ public class WeixinController {
     @RequestMapping(value = "/ask_for_msg_push", produces = "application/json")
     public
     @ResponseBody
-    Result<?> askForMessagePsuh(@RequestParam("lastMessageId") String lastMessageId, @RequestParam("friendOpenId")String friendOpenId,
+    Result<?> askForMessagePsuh(@RequestParam("lastMessageId") String lastMessageId, @RequestParam("friendOpenId") String friendOpenId,
                                 @RequestParam("sessionId") String sessionId) {
 
         logger.info(String.format("ask_for_msg_push, friendOpenId: %s, lastMessageId: %s,  sessionId:%s",

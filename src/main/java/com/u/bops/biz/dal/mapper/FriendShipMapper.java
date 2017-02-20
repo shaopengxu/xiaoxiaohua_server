@@ -12,4 +12,5 @@ public interface FriendShipMapper extends GeneralMapper<FriendShip> {
 
     void setDelete(@Param("openId") String openId, @Param("friendOpenId") String friendOpenId);
 
+    void deleteFriendShip(@Param("openId") String openId, @Param("friendOpenId") String friendOpenId);
 }

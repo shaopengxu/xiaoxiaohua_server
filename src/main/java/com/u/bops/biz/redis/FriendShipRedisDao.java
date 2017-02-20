@@ -50,10 +50,16 @@ public class FriendShipRedisDao {
 
     /**
      * 返回随机头像的本地存储地址
+     *
      * @return
      */
-    public List<String> getRandomImages(){
+    public List<String> getRandomImages() {
         //TODO
         return new ArrayList<>();
+    }
+
+    public void deleteFriendShip(String openId, String friendOpenId) {
+        redisDao.lrem(FRIENDSHIP + "_" + openId, 0, friendOpenId);
+        redisDao.lrem(FRIENDSHIP + "_" + friendOpenId, 0, openId);
     }
 }

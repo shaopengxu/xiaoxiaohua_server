@@ -36,6 +36,7 @@ public class FriendShipService {
 
     /**
      * 添加好友
+     *
      * @param openId
      * @param friendOpenId
      * @param nickName
@@ -76,6 +77,7 @@ public class FriendShipService {
 
     /**
      * 获取好友信息，包括unreadMessageSize、 最近聊天时间、最后一句对话
+     *
      * @param openId
      * @return
      */
@@ -115,7 +117,7 @@ public class FriendShipService {
     public void updateFriendMessage(String openId, String friendOpenId, String nickName, String image) {
         FriendShip friendShip = friendShipMapper.getFriendShip(openId, friendOpenId);
         if (friendShip == null) {
-            return ;
+            return;
         }
         if (StringUtils.isNotBlank(nickName)) {
             friendShip.setFriendNickName(nickName);
@@ -130,7 +132,18 @@ public class FriendShipService {
         return friendShipRedisDao.getFriendOpenIds(openId).size();
     }
 
-    public List<String> getRandomImages(){
+    public List<String> getRandomImages() {
         return friendShipRedisDao.getRandomImages();
+    }
+
+    public void deleteFriendShips(String openId) {
+        List<String> friendOpenIds = friendShipRedisDao.getFriendOpenIds(openId);
+        for (String friendOpenId : friendOpenIds) {
+            chatMessageRedisDao.deleteChatMessages(openId, friendOpenId);
+            friendShipRedisDao.deleteFriendShip(openId, friendOpenId);
+            friendShipMapper.deleteFriendShip(openId, friendOpenId);
+            friendShipMapper.deleteFriendShip(friendOpenId, openId);
+        }
+
     }
 }

@@ -73,7 +73,6 @@ public class RedisDao {
     }
 
 
-
     public long hincr(String key, String field) {
         Jedis jedis = jedisPool.getResource();
         try {
@@ -154,5 +153,25 @@ public class RedisDao {
             jedis.close();
         }
     }
+
+    public void del(String key) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            jedis.del(key);
+        } finally {
+            jedis.close();
+        }
+    }
+
+    public void hdel(String key, String field) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            jedis.hdel(key, field);
+        } finally {
+            jedis.close();
+        }
+    }
+
+
 
 }

@@ -112,6 +112,10 @@
         </where>
     </update>
 
+    <delete id="deleteFriendShip" >
+        delete from friend_ship where open_id = #{openId} and friend_open_id = #{friendOpenId}
+    </delete>
+
     <insert id="insert" parameterType="FriendShip" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
         INSERT INTO `friend_ship`
         (`open_id`,`friend_open_id`,`deleted`,`friend_nick_name`,`friend_image`,`create_time`,`update_time`)
